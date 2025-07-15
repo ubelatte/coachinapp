@@ -1,12 +1,10 @@
 import streamlit as st
-import os
-import time
 import gspread
 from google.oauth2.service_account import Credentials
 from openai import OpenAI
 from docx import Document
 from io import BytesIO
-import re
+import time
 
 # === PAGE SETTINGS ===
 st.set_page_config(page_title="Mestek Coaching Generator", page_icon="📄")
@@ -15,20 +13,14 @@ st.title("📄 Mestek AI Coaching Generator")
 # === PASSWORD PROTECTION ===
 PASSWORD = "WFHQmestek413"
 if st.text_input("Enter password:", type="password") != PASSWORD:
-    st.warning("Access denied.")
+    st.warning("Please type the correct password and hit Enter.")
     st.stop()
 
-# === CONFIGURATION ===
-SHEET_NAME = "Coaching Assessment Form"
-OUTPUT_FOLDER = "/tmp"
-LEADERSHIP_OUTPUT_FOLDER = "/tmp"
-
-# === AUTH WITH GOOGLE SHEETS ===
+# === GOOGLE SHEETS AUTH ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-service_account_info = st.secrets["gcp_service_account"]
-creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
+creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
 client = gspread.authorize(creds)
-sheet = client.open(SHEET_NAME).sheet1
+sheet = client.open("Coaching Assessment Form").sheet1
 
 # === GET LATEST FORM ENTRY ===
 data = sheet.get_all_values()
@@ -37,7 +29,7 @@ rows = data[1:]
 latest_row = rows[-1]
 latest = dict(zip(headers, latest_row))
 
-# === LANGUAGE DETECTION ===
+# === DETECT LANGUAGE ===
 language = latest.get("Language Spoken", "English").strip().lower()
 
 # === GPT PROMPTS ===
@@ -101,31 +93,26 @@ with st.spinner("🤖 Generating coaching & leadership insights..."):
         temperature=0.7,
     ).choices[0].message.content.strip()
 
-# === BUILD DOCUMENTS ===
+# === BUILD DOCX FILES IN MEMORY ===
 def build_doc(title, content):
     doc = Document()
     doc.add_heading(title, 0)
-    for para in content.split("\n"):
+    for para in content.strip().split("\n"):
         doc.add_paragraph(para)
     return doc
 
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-os.makedirs(LEADERSHIP_OUTPUT_FOLDER, exist_ok=True)
-
 timestamp = int(time.time())
 employee_name = latest.get("Employee Name", "unknown").replace(" ", "_")
-coaching_filename = f"coaching_{employee_name}_{timestamp}.docx"
-leadership_filename = f"leadership_{employee_name}_reflection_{timestamp}.docx"
-
-coaching_doc = build_doc("Employee Coaching Report", coaching_response)
-leadership_doc = build_doc("Leadership Reflection", leadership_response)
 
 coaching_io = BytesIO()
+build_doc("Employee Coaching Report", coaching_response).save(coaching_io)
+coaching_io.seek(0)
+
 leadership_io = BytesIO()
-coaching_doc.save(coaching_io)
-leadership_doc.save(leadership_io)
+build_doc("Leadership Reflection", leadership_response).save(leadership_io)
+leadership_io.seek(0)
 
 # === STREAMLIT DOWNLOAD ===
 st.success("✅ AI coaching documents are ready!")
-st.download_button("📥 Download Coaching Document", data=coaching_io.getvalue(), file_name=coaching_filename)
-st.download_button("📥 Download Leadership Reflection", data=leadership_io.getvalue(), file_name=leadership_filename)
+st.download_button("📥 Download Coaching Document", data=coaching_io, file_name=f"coaching_{employee_name}_{timestamp}.docx")
+st.download_button("📥 Download Leadership Reflection", data=leadership_io, file_name=f"leadership_{employee_name}_{timestamp}.docx")
