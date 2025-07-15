@@ -112,16 +112,43 @@ def build_coaching_doc(latest, coaching_dict):
 def build_leadership_doc(latest, leadership_text):
     doc = Document()
     doc.add_heading("Leadership Reflection", 0)
+
+    # Section 1 metadata
     add_bold_para(doc, "Supervisor Name:", latest["Supervisor Name"])
     add_bold_para(doc, "Employee Name:", latest["Employee Name"])
     add_bold_para(doc, "Department:", latest["Department"])
     add_bold_para(doc, "Issue Type:", latest["Issue Type"])
     add_bold_para(doc, "Date of Incident:", latest["Date of Incident"])
-    add_section_header(doc, "\nAI-Generated Leadership Guidance:")
-    for para in leadership_text.split("\n"):
-        if para.strip():
+
+    doc.add_page_break()
+    doc.add_heading("AI-Generated Leadership Guidance", level=1)
+
+    # Parse leadership_text into sections
+    sections = ["Private Reflection", "Coaching Tips", "Tone Guidance", "Follow-Up Recommendation", "Supervisor Accountability Tip"]
+    current_title = None
+    buffer = []
+
+    lines = leadership_text.splitlines()
+    for line in lines + [""]:  # Add empty line to force flush at end
+        stripped = line.strip()
+        if stripped.endswith(":") and stripped[:-1] in sections:
+            if current_title and buffer:
+                # Add previous section
+                doc.add_paragraph(current_title + ":", style='Heading 3')
+                for para in buffer:
+                    doc.add_paragraph(para.strip())
+                buffer = []
+            current_title = stripped[:-1]
+        elif current_title:
+            buffer.append(stripped)
+
+    if current_title and buffer:
+        doc.add_paragraph(current_title + ":", style='Heading 3')
+        for para in buffer:
             doc.add_paragraph(para.strip())
+
     return doc
+
 
 # === MAIN PROCESSING ===
 if submitted:
