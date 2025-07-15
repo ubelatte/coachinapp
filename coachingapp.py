@@ -59,11 +59,9 @@ def add_section_header(doc, text):
     run.font.size = Pt(12)
 
 def parse_coaching_sections(raw_text):
-    """Parse coaching GPT output into a dict of sections."""
     sections = {}
     current_section = None
     buffer = []
-
     for line in raw_text.splitlines():
         line = line.strip()
         if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
@@ -73,10 +71,8 @@ def parse_coaching_sections(raw_text):
             current_section = line[:-1]
         elif current_section:
             buffer.append(line)
-
     if current_section and buffer:
         sections[current_section] = " ".join(buffer).strip()
-
     return sections
 
 def build_coaching_doc(latest, coaching_dict):
@@ -96,7 +92,9 @@ def build_coaching_doc(latest, coaching_dict):
     add_bold_para(doc, "Language Spoken:", latest["Language Spoken"])
     add_bold_para(doc, "Prior Actions Taken:", latest["Previous Coaching/Warnings"])
 
-    doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
+    separator = doc.add_paragraph()
+    separator.alignment = 1
+    separator.add_run("———   End of Supervisor Entry   ———").bold = True
 
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
@@ -203,7 +201,6 @@ Description: {latest['Incident Description']}
             temperature=0.7,
         ).choices[0].message.content.strip()
 
-    # === BUILD DOCX ===
     timestamp = int(time.time())
     employee_name_clean = employee.replace(" ", "_")
 
@@ -215,7 +212,6 @@ Description: {latest['Incident Description']}
     build_leadership_doc(latest, leadership_response).save(leadership_io)
     leadership_io.seek(0)
 
-    # === DOWNLOAD BUTTONS ===
     st.success("✅ Coaching documents ready:")
     col1, col2 = st.columns(2)
     with col1:
