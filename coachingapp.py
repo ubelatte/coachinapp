@@ -113,28 +113,32 @@ def build_leadership_doc(latest, leadership_text):
     doc = Document()
     doc.add_heading("Leadership Reflection", 0)
 
-    # Section 1 metadata
+    # Add metadata at the top
     add_bold_para(doc, "Supervisor Name:", latest["Supervisor Name"])
     add_bold_para(doc, "Employee Name:", latest["Employee Name"])
     add_bold_para(doc, "Department:", latest["Department"])
     add_bold_para(doc, "Issue Type:", latest["Issue Type"])
     add_bold_para(doc, "Date of Incident:", latest["Date of Incident"])
 
-    doc.add_page_break()
-    doc.add_heading("AI-Generated Leadership Guidance", level=1)
+    doc.add_paragraph()  # Add a small spacer
+    add_section_header(doc, "AI-Generated Leadership Guidance:")
 
-    # Parse leadership_text into sections
+    # Parse and format the guidance by sections
     sections = ["Private Reflection", "Coaching Tips", "Tone Guidance", "Follow-Up Recommendation", "Supervisor Accountability Tip"]
     current_title = None
     buffer = []
 
     lines = leadership_text.splitlines()
-    for line in lines + [""]:  # Add empty line to force flush at end
+    for line in lines + [""]:  # Add sentinel to flush last block
         stripped = line.strip()
         if stripped.endswith(":") and stripped[:-1] in sections:
             if current_title and buffer:
-                # Add previous section
-                doc.add_paragraph(current_title + ":", style='Heading 3')
+                doc.add_paragraph()  # space between sections
+                # Bold section title
+                title_para = doc.add_paragraph()
+                run = title_para.add_run(current_title + ":")
+                run.bold = True
+                # Add section content
                 for para in buffer:
                     doc.add_paragraph(para.strip())
                 buffer = []
@@ -143,12 +147,14 @@ def build_leadership_doc(latest, leadership_text):
             buffer.append(stripped)
 
     if current_title and buffer:
-        doc.add_paragraph(current_title + ":", style='Heading 3')
+        doc.add_paragraph()
+        title_para = doc.add_paragraph()
+        run = title_para.add_run(current_title + ":")
+        run.bold = True
         for para in buffer:
             doc.add_paragraph(para.strip())
 
     return doc
-
 
 # === MAIN PROCESSING ===
 if submitted:
