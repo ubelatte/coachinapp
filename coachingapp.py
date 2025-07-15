@@ -5,10 +5,9 @@ from docx.shared import Pt
 from io import BytesIO
 from datetime import date
 import time
-import re
 
 # === PAGE SETTINGS ===
-st.set_page_config(page_title="Mestek Coaching Generator", page_icon="📄")
+st.set_page_config(page_title="Mestek Coaching Generator", page_icon=None)
 st.title("📄 Mestek AI Coaching Generator")
 
 # === PASSWORD PROTECTION ===
@@ -21,20 +20,24 @@ if st.text_input("Enter password:", type="password") != PASSWORD:
 with st.form("coaching_form"):
     supervisor = st.selectbox("Supervisor Name", [
         "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
-        "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
+        "Janitza", "Fundi", "Lisa", "Dave", "Dean"
+    ])
     employee = st.text_input("Employee Name")
     department = st.selectbox("Department", [
         "Rough In", "Paint Line (NP)", "Commercial Fabrication",
         "Baseboard Accessories", "Maintenance", "Residential Fabrication",
         "Residential Assembly/Packing", "Warehouse (55WIPR)",
         "Convector & Twin Flo", "Shipping/Receiving/Drivers",
-        "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"])
+        "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"
+    ])
     incident_date = st.date_input("Date of Incident", value=date.today())
     issue_type = st.selectbox("Issue Type", [
         "Attendance", "Safety", "Behavior", "Performance",
-        "Policy Violation", "Recognition"])
+        "Policy Violation", "Recognition"
+    ])
     action_taken = st.selectbox("Action to be Taken", [
-        "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
+        "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"
+    ])
     description = st.text_area("Incident Description")
     estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
     language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
@@ -42,7 +45,7 @@ with st.form("coaching_form"):
     previous = st.radio("Previous Coaching/Warnings", ["Yes", "No"])
     submitted = st.form_submit_button("Generate Coaching Report")
 
-# === UTILITIES ===
+# === DOCX HELPERS ===
 def add_bold_para(doc, label, value):
     para = doc.add_paragraph()
     run = para.add_run(label)
@@ -55,17 +58,25 @@ def add_section_header(doc, text):
     run.bold = True
     run.font.size = Pt(12)
 
-def clean_section_text(text):
-    # Remove asterisks and excess spacing
-    return re.sub(r"\*+", "", text).strip()
-
 def parse_coaching_sections(raw_text):
+    """Parse coaching GPT output into dict"""
     sections = {}
-    matches = re.split(r"(?<=\n|^)(Incident Summary|Expectations Going Forward|Tags|Severity):", raw_text)
-    for i in range(1, len(matches) - 1, 2):
-        key = matches[i].strip()
-        val = matches[i + 1].strip().split("\n", 1)[0].strip()
-        sections[key] = clean_section_text(val)
+    current_section = None
+    buffer = []
+
+    for line in raw_text.splitlines():
+        line = line.strip()
+        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+            if current_section and buffer:
+                sections[current_section] = " ".join(buffer).strip()
+                buffer = []
+            current_section = line[:-1]
+        elif current_section:
+            buffer.append(line)
+
+    if current_section and buffer:
+        sections[current_section] = " ".join(buffer).strip()
+
     return sections
 
 def build_coaching_doc(latest, coaching_dict):
@@ -95,7 +106,8 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph(
         "I understand that this document serves as a formal record of the counseling provided. "
         "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
+        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation."
+    )
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
@@ -111,10 +123,10 @@ def build_leadership_doc(latest, leadership_text):
     add_section_header(doc, "\nAI-Generated Leadership Guidance:")
     for para in leadership_text.split("\n"):
         if para.strip():
-            doc.add_paragraph(clean_section_text(para.strip()))
+            doc.add_paragraph(para.strip())
     return doc
 
-# === GPT PROCESSING ===
+# === MAIN PROCESSING ===
 if submitted:
     latest = {
         "Supervisor Name": supervisor,
@@ -189,7 +201,7 @@ Description: {latest['Incident Description']}
             temperature=0.7,
         ).choices[0].message.content.strip()
 
-    # === DOCX GENERATION ===
+    # === BUILD DOCX ===
     timestamp = int(time.time())
     employee_name_clean = employee.replace(" ", "_")
 
@@ -202,7 +214,7 @@ Description: {latest['Incident Description']}
     leadership_io.seek(0)
 
     # === DOWNLOAD BUTTONS ===
-    st.success("✅ AI coaching documents are ready!")
+    st.success("✅ Coaching documents ready:")
     col1, col2 = st.columns(2)
     with col1:
         st.download_button("Download Coaching Document", data=coaching_io,
