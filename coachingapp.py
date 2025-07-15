@@ -97,6 +97,8 @@ def build_coaching_doc(latest, coaching_dict):
     add_bold_para(doc, "Prior Actions Taken:", latest["Previous Coaching/Warnings"])
 
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
+
+    doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
