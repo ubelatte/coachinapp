@@ -79,7 +79,6 @@ def build_coaching_doc(latest, coaching_text):
 
     # Add formatted coaching content
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
-        pattern = rf"{section}:(.*?)\n(?=\w+:|$)"
         content = coaching_text.split(f"{section}:")[-1].strip().split("\n")[0].strip()
         add_section_header(doc, section + ":")
         doc.add_paragraph(content)
