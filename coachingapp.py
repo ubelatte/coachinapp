@@ -17,7 +17,7 @@ if st.text_input("Enter password:", type="password") != PASSWORD:
     st.warning("Please type the correct password and hit Enter.")
     st.stop()
 
-# === STREAMLIT FORM ===
+# === FORM ===
 with st.form("coaching_form"):
     supervisor = st.selectbox("Supervisor Name", [
         "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
@@ -42,7 +42,7 @@ with st.form("coaching_form"):
     previous = st.radio("Previous Coaching/Warnings", ["Yes", "No"])
     submitted = st.form_submit_button("Generate Coaching Report")
 
-# === UTILITIES ===
+# === DOCX HELPERS ===
 def add_bold_para(doc, label, value):
     para = doc.add_paragraph()
     run = para.add_run(label)
@@ -55,23 +55,17 @@ def add_section_header(doc, text):
     run.bold = True
     run.font.size = Pt(12)
 
-def extract_sections(text, sections):
-    output = {}
-    for i, section in enumerate(sections):
-        start = re.search(rf"{section}:", text)
-        if not start:
-            continue
-        end = None
-        for next_section in sections[i+1:]:
-            end_match = re.search(rf"{next_section}:", text[start.end():])
-            if end_match:
-                end = start.end() + end_match.start()
-                break
-        output[section] = text[start.end():end].strip() if end else text[start.end():].strip()
-    return output
+def clean_markdown(text):
+    return re.sub(r"\*\*(.*?)\*\*", r"\1", text).replace("**", "").strip()
 
-# === DOCUMENT GENERATION ===
-def build_coaching_doc(latest, coaching_dict):
+def extract_section(text, section_name):
+    pattern = rf"{section_name}:\s*(.*?)(?=\n\w+?:|$)"
+    match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+    if match:
+        return clean_markdown(match.group(1).strip())
+    return ""
+
+def build_coaching_doc(latest, full_text):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
     doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
@@ -90,15 +84,17 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
-        if section in coaching_dict:
-            add_section_header(doc, section + ":")
-            doc.add_paragraph(coaching_dict[section])
+        content = extract_section(full_text, section)
+        if content:
+            add_section_header(doc, f"{section}:")
+            doc.add_paragraph(content)
 
     doc.add_paragraph("\nAcknowledgment of Receipt:")
     doc.add_paragraph(
         "I understand that this document serves as a formal record of the counseling provided. "
         "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
+        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation."
+    )
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
@@ -113,10 +109,10 @@ def build_leadership_doc(latest, leadership_text):
     add_bold_para(doc, "Date of Incident:", latest["Date of Incident"])
     add_section_header(doc, "\nAI-Generated Leadership Guidance:")
     for para in leadership_text.split("\n"):
-        doc.add_paragraph(para.strip())
+        doc.add_paragraph(clean_markdown(para.strip()))
     return doc
 
-# === GPT PROCESSING ===
+# === MAIN LOGIC ===
 if submitted:
     latest = {
         "Supervisor Name": supervisor,
@@ -132,17 +128,16 @@ if submitted:
     }
 
     prompt_coaching = f"""
-You are a workplace coaching assistant. Using the data below, generate a Workplace Coaching Report with the following sections:
+You are a workplace coaching assistant. Using the data below, generate a coaching report with:
 Incident Summary:
 Expectations Going Forward:
 Tags:
 Severity:
 
-Data:
 Supervisor: {supervisor}
 Employee: {employee}
 Department: {department}
-Date of Incident: {incident_date.strftime('%Y-%m-%d')}
+Date of Incident: {incident_date}
 Issue Type: {issue_type}
 Action Taken: {action_taken}
 Description: {description}
@@ -159,64 +154,52 @@ Description: {description}
 """
 
     client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
-
     with st.spinner("🤖 Generating coaching & leadership insights..."):
-        coaching_raw = client_openai.chat.completions.create(
+        coaching_full = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful HR assistant."},
-                {"role": "user", "content": prompt_coaching}
+                {"role": "user", "content": prompt_coaching},
             ],
             temperature=0.7,
         ).choices[0].message.content.strip()
 
         if language.strip().lower() != "english":
-            coaching_raw = client_openai.chat.completions.create(
+            translation_prompt = f"Translate this professionally to {language.title()}:\n{coaching_full}"
+            coaching_full = client_openai.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You translate workplace HR documents professionally."},
-                    {"role": "user", "content": f"Translate the following into {language.title()} professionally:\n{coaching_raw}"}
+                    {"role": "user", "content": translation_prompt},
                 ],
                 temperature=0.3,
             ).choices[0].message.content.strip()
 
-        coaching_sections = extract_sections(coaching_raw, [
-            "Incident Summary", "Expectations Going Forward", "Tags", "Severity"
-        ])
-
-        leadership_response = client_openai.chat.completions.create(
+        leadership_text = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a leadership coach."},
-                {"role": "user", "content": prompt_leadership}
+                {"role": "user", "content": prompt_leadership},
             ],
             temperature=0.7,
         ).choices[0].message.content.strip()
 
-    # === DOCX GENERATION ===
+    # === Generate Files ===
     timestamp = int(time.time())
-    employee_name_clean = employee.replace(" ", "_")
+    filename_base = employee.replace(" ", "_")
     coaching_io = BytesIO()
-    leadership_io = BytesIO()
-
-    build_coaching_doc(latest, coaching_sections).save(coaching_io)
+    build_coaching_doc(latest, coaching_full).save(coaching_io)
     coaching_io.seek(0)
-
-    build_leadership_doc(latest, leadership_response).save(leadership_io)
+    leadership_io = BytesIO()
+    build_leadership_doc(latest, leadership_text).save(leadership_io)
     leadership_io.seek(0)
 
-    # === DOWNLOADS ===
-    st.success("✅ AI coaching documents are ready!")
+    # === Download Buttons (Independent) ===
+    st.success("✅ Coaching documents ready!")
     col1, col2 = st.columns(2)
     with col1:
-        st.download_button(
-            label="Download Coaching Document",
-            data=coaching_io,
-            file_name=f"coaching_{employee_name_clean}_{timestamp}.docx"
-        )
+        st.download_button("📄 Download Coaching Document", data=coaching_io,
+                           file_name=f"coaching_{filename_base}_{timestamp}.docx")
     with col2:
-        st.download_button(
-            label="Download Leadership Reflection",
-            data=leadership_io,
-            file_name=f"leadership_{employee_name_clean}_{timestamp}.docx"
-        )
+        st.download_button("📄 Download Leadership Reflection", data=leadership_io,
+                           file_name=f"leadership_{filename_base}_{timestamp}.docx")
