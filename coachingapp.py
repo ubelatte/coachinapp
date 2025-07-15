@@ -53,13 +53,11 @@ with st.form("coaching_form"):
     else:
         language = language_option
 
-    prior_actions = st.text_input("Prior Actions Taken (e.g. N/A, Verbal Warning)")
-
     previous = st.radio("Previous Coaching/Warnings", ["Yes", "No"])
 
     submitted = st.form_submit_button("Generate Coaching Report")
 
-# === GPT + DOCX HANDLING ===
+# === GPT PROCESSING ===
 if submitted:
     latest = {
         "Supervisor Name": supervisor,
@@ -72,143 +70,137 @@ if submitted:
         "Estimated/Annual Cost": estimated_cost,
         "Language Spoken": language,
         "Previous Coaching/Warnings": previous,
-        "Prior Actions Taken": prior_actions,
     }
 
-    prompt = f"""
+    prompt_coaching = f"""
 You are a workplace coaching assistant. Using the data below, generate:
-
 1. Incident Summary
 2. Expectations Going Forward
-3. Private Coaching Tips
-4. Conversation Tone Guidance
-5. Tags
-6. Severity
-7. Follow-Up Recommendation
-8. Supervisor Accountability Tip
+3. Tags
+4. Severity
 
 Data:
-Supervisor: {supervisor}
-Employee: {employee}
-Department: {department}
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
 Date of Incident: {latest['Date of Incident']}
-Issue Type: {issue_type}
-Action Taken: {action_taken}
-Description: {description}
+Issue Type: {latest['Issue Type']}
+Action Taken: {latest['Action Taken']}
+Description: {latest['Incident Description']}
 """
 
-    leadership_prompt = f"""
-You are a leadership coach. Using the data below, generate a private reflection including coaching tips, tone guidance, and 3 reflection questions.
+    prompt_leadership = f"""
+You are a leadership coach. Using the data below, generate:
+1. Private Coaching Tips
+2. Tone Guidance
+3. Follow-up Recommendation
+4. Supervisor Accountability Tip
+5. Three leadership reflection questions
 
-Supervisor: {supervisor}
-Employee: {employee}
-Department: {department}
-Issue Type: {issue_type}
-Description: {description}
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Issue Type: {latest['Issue Type']}
+Description: {latest['Incident Description']}
 """
 
     client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-    with st.spinner("🤖 Generating AI coaching & leadership documents..."):
-        coaching_text = client_openai.chat.completions.create(
+    with st.spinner("🤖 Generating coaching & leadership insights..."):
+        coaching_response = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful HR assistant."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt_coaching},
             ],
             temperature=0.7,
         ).choices[0].message.content.strip()
 
-        if language.strip().lower() != "english":
-            translation_prompt = f"Translate the following into {language.title()} professionally:\n{coaching_text}"
-            coaching_text = client_openai.chat.completions.create(
+        if language.lower() != "english":
+            translation_prompt = f"Translate the following into {language.title()} professionally:\n{coaching_response}"
+            coaching_response = client_openai.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You translate workplace HR documents professionally."},
-                    {"role": "user", "content": translation_prompt}
+                    {"role": "user", "content": translation_prompt},
                 ],
                 temperature=0.3,
             ).choices[0].message.content.strip()
 
-        leadership_text = client_openai.chat.completions.create(
+        leadership_response = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a leadership coach."},
-                {"role": "user", "content": leadership_prompt}
+                {"role": "user", "content": prompt_leadership},
             ],
             temperature=0.7,
         ).choices[0].message.content.strip()
 
-    # === Build Formatted Coaching DOCX ===
+    # === DOCX GENERATION ===
     def build_coaching_doc():
         doc = Document()
         doc.add_heading("Employee Coaching & Counseling Form", 0)
-        doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
+        doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})\n")
 
         doc.add_heading("Section 1 – Supervisor Entry", level=1)
         doc.add_paragraph(f"Date when Incident occurred: {latest['Date of Incident']}")
-        doc.add_paragraph(f"Department Name: {department}")
-        doc.add_paragraph(f"Employee Name: {employee}")
-        doc.add_paragraph(f"Supervisor Name: {supervisor}")
-        doc.add_paragraph(f"Action Taken: {action_taken}")
-        doc.add_paragraph(f"Issue Type: {issue_type}")
-        doc.add_paragraph(f"Incident Description: {description}")
-        doc.add_paragraph(f"Estimated or Actual Cost: {estimated_cost or '________________________'}")
-        doc.add_paragraph(f"Language Spoken: {language}")
-        doc.add_paragraph(f"Prior Actions Taken: {prior_actions or 'N/A'}")
+        doc.add_paragraph(f"Department Name: {latest['Department']}")
+        doc.add_paragraph(f"Employee Name: {latest['Employee Name']}")
+        doc.add_paragraph(f"Supervisor Name: {latest['Supervisor Name']}")
+        doc.add_paragraph(f"Action Taken: {latest['Action Taken']}")
+        doc.add_paragraph(f"Issue Type: {latest['Issue Type']}")
+        doc.add_paragraph(f"Incident Description: {latest['Incident Description']}")
+        doc.add_paragraph(f"Estimated or Actual Cost: {latest['Estimated/Annual Cost'] or '________________________'}")
+        doc.add_paragraph(f"Language Spoken: {latest['Language Spoken']}")
+        doc.add_paragraph(f"Prior Actions Taken: {latest['Previous Coaching/Warnings']}\n")
 
         doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
-        for para in coaching_text.split("\n"):
-            doc.add_paragraph(para.strip())
+        for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+            part = coaching_response.split(f"**{section}:**")
+            if len(part) > 1:
+                doc.add_paragraph(f"{section}:", style="List Bullet").bold = True
+                doc.add_paragraph(part[1].strip())
 
-        doc.add_paragraph("\nAcknowledgment of Receipt:")
-        doc.add_paragraph(
-            "I understand that this document serves as a formal record of the counseling provided. "
-            "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-            "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation."
-        )
-
-        doc.add_paragraph("\nEmployee Signature: _________________________        Date: ________________")
+        doc.add_paragraph("\nAcknowledgment of Receipt:\nI understand that this document serves as a formal record of the counseling provided. I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.\n")
+        doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
         doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-
         return doc
 
     def build_leadership_doc():
         doc = Document()
         doc.add_heading("Leadership Reflection", 0)
-        for para in leadership_text.split("\n"):
-            doc.add_paragraph(para.strip())
+        for section in ["Private Coaching Tips", "Tone Guidance", "Follow-up Recommendation", "Supervisor Accountability Tip", "Three leadership reflection questions"]:
+            part = leadership_response.split(f"**{section}:**")
+            if len(part) > 1:
+                doc.add_heading(section, level=2)
+                doc.add_paragraph(part[1].strip())
+            else:
+                doc.add_paragraph(leadership_response)
         return doc
 
-    # === Write Files to Memory
     timestamp = int(time.time())
-    safe_name = employee.replace(" ", "_")
+    employee_name_clean = employee.replace(" ", "_")
 
-    coaching_doc = BytesIO()
-    build_coaching_doc().save(coaching_doc)
-    coaching_doc.seek(0)
+    coaching_io = BytesIO()
+    build_coaching_doc().save(coaching_io)
+    coaching_io.seek(0)
 
-    leadership_doc = BytesIO()
-    build_leadership_doc().save(leadership_doc)
-    leadership_doc.seek(0)
+    leadership_io = BytesIO()
+    build_leadership_doc().save(leadership_io)
+    leadership_io.seek(0)
 
-    # === Store in session so downloads won't reset form
-    st.session_state["coaching_doc"] = coaching_doc
-    st.session_state["leadership_doc"] = leadership_doc
-    st.session_state["employee_name"] = safe_name
-    st.session_state["timestamp"] = timestamp
-
-# === SHOW DOWNLOAD BUTTONS
-if "coaching_doc" in st.session_state and "leadership_doc" in st.session_state:
+    # === DOWNLOAD BUTTONS ===
     st.success("✅ AI coaching documents are ready!")
-
-    st.download_button(
-        "📥 Download Coaching Document",
-        data=st.session_state["coaching_doc"],
-        file_name=f"coaching_{st.session_state['employee_name']}_{st.session_state['timestamp']}.docx"
-    )
-    st.download_button(
-        "📥 Download Leadership Reflection",
-        data=st.session_state["leadership_doc"],
-        file_name=f"leadership_{st.session_state['employee_name']}_{st.session_state['timestamp']}.docx"
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            "📥 Download Coaching Form",
+            data=coaching_io,
+            file_name=f"coaching_{employee_name_clean}_{timestamp}.docx"
+        )
+    with col2:
+        st.download_button(
+            "📥 Download Leadership Reflection",
+            data=leadership_io,
+            file_name=f"leadership_{employee_name_clean}_{timestamp}.docx"
+        )
