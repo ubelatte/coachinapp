@@ -59,7 +59,7 @@ def add_section_header(doc, text):
     run.font.size = Pt(12)
 
 def parse_coaching_sections(raw_text):
-    """Parse coaching GPT output into dict"""
+    """Parse coaching GPT output into a dict of sections."""
     sections = {}
     current_section = None
     buffer = []
