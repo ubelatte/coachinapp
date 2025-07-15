@@ -47,7 +47,12 @@ with st.form("coaching_form"):
 
     estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
 
-    language = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
+    # Language field with "Other" support
+    language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
+    if language_option == "Other":
+        language = st.text_input("Please specify the language:")
+    else:
+        language = language_option
 
     previous = st.radio("Previous Coaching/Warnings", ["Yes", "No"])
 
@@ -69,34 +74,36 @@ if submitted:
     }
 
     prompt_coaching = f"""
-    You are a workplace coaching assistant. Using the data below, generate:
-    1. Incident Summary
-    2. Expectations Going Forward
-    3. Tags
-    4. Severity
+You are a workplace coaching assistant. Using the data below, generate:
+1. Incident Summary
+2. Expectations Going Forward
+3. Tags
+4. Severity
 
-    Data:
-    Supervisor: {latest['Supervisor Name']}
-    Employee: {latest['Employee Name']}
-    Department: {latest['Department']}
-    Date of Incident: {latest['Date of Incident']}
-    Issue Type: {latest['Issue Type']}
-    Action Taken: {latest['Action Taken']}
-    Description: {latest['Incident Description']}
-    """
+Data:
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Date of Incident: {latest['Date of Incident']}
+Issue Type: {latest['Issue Type']}
+Action Taken: {latest['Action Taken']}
+Description: {latest['Incident Description']}
+"""
 
     prompt_leadership = f"""
-    You are a leadership coach. Using the data below, generate a private reflection including coaching tips, tone guidance, and 3 reflection questions.
+You are a leadership coach. Using the data below, generate a private reflection including coaching tips, tone guidance, and 3 reflection questions.
 
-    Supervisor: {latest['Supervisor Name']}
-    Employee: {latest['Employee Name']}
-    Department: {latest['Department']}
-    Issue Type: {latest['Issue Type']}
-    Description: {latest['Incident Description']}
-    """
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Issue Type: {latest['Issue Type']}
+Description: {latest['Incident Description']}
+"""
 
     client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
     with st.spinner("🤖 Generating coaching & leadership insights..."):
+        # Coaching response
         coaching_response = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -107,7 +114,7 @@ if submitted:
         ).choices[0].message.content.strip()
 
         # Translate if needed
-        if language.lower() != "english":
+        if language.strip().lower() != "english":
             translation_prompt = f"Translate the following into {language.title()} professionally:\n{coaching_response}"
             coaching_response = client_openai.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -118,6 +125,7 @@ if submitted:
                 temperature=0.3,
             ).choices[0].message.content.strip()
 
+        # Leadership response
         leadership_response = client_openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
