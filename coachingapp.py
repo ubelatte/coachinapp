@@ -279,7 +279,7 @@ try:
     height=400
     )
 
-st.altair_chart(bar_chart, use_container_width=True)
+    st.altair_chart(bar_chart, use_container_width=True)
 
 
     st.subheader("Actions Over Time")
