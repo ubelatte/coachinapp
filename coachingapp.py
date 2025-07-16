@@ -239,43 +239,17 @@ Description: {description}
 with tab2:
     st.header("📊 Coaching Trend Dashboard")
 
-    sheet_url = st.secrets["sheet_config"]["sheet_csv_url"]
-    df = pd.read_csv(sheet_url)
-    try:
-        df = pd.read_csv(sheet_url)
-        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
-
-        filter_action = st.selectbox("Filter by Action Taken", ["All"] + df["Action to be Taken"].dropna().unique().tolist())
-        if filter_action != "All":
-            df = df[df["Action to be Taken"] == filter_action]
-
-        st.dataframe(df)
-
-        st.subheader("Issue Type Count")
-        issue_counts = df["Issue Type"].value_counts()
-        st.bar_chart(issue_counts)
-
-        st.subheader("Actions Over Time")
-        action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
-        st.line_chart(action_time)
-
-    except Exception as e:
-        st.warning("Could not load trend data.")
-        st.text(str(e))
-
-
-# === SNIPPET CONTINUATION ===
-
-with tab2:
-    st.header("📊 Coaching Trend Dashboard")
-
     sheet_url = st.secrets["sheet_config"].get("sheet_csv_url")
 
     try:
         df = pd.read_csv(sheet_url)
         df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
 
-        filter_action = st.selectbox("Filter by Action Taken", ["All"] + df["Action to be Taken"].dropna().unique().tolist(), key="trend_action_filter")
+        filter_action = st.selectbox(
+            "Filter by Action Taken",
+            ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
+            key="trend_action_filter"
+        )
         if filter_action != "All":
             df = df[df["Action to be Taken"] == filter_action]
 
