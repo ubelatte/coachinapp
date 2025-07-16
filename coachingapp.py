@@ -275,7 +275,7 @@ with tab2:
         df = pd.read_csv(sheet_url)
         df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
 
-        filter_action = st.selectbox("Filter by Action Taken", ["All"] + df["Action to be Taken"].dropna().unique().tolist())
+        filter_action = st.selectbox("Filter by Action Taken", ["All"] + df["Action to be Taken"].dropna().unique().tolist(), key="trend_action_filter")
         if filter_action != "All":
             df = df[df["Action to be Taken"] == filter_action]
 
