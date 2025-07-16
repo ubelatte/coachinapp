@@ -264,9 +264,23 @@ try:
 
     st.dataframe(df)
 
+    import altair as alt
+
     st.subheader("Issue Type Count")
-    issue_counts = df["Issue Type"].value_counts()
-    st.bar_chart(issue_counts)
+    issue_counts = df["Issue Type"].value_counts().reset_index()
+    issue_counts.columns = ["Issue Type", "Count"]
+    
+    bar_chart = alt.Chart(issue_counts).mark_bar().encode(
+        x=alt.X("Issue Type:N", sort="-y"),
+        y=alt.Y("Count:Q", scale=alt.Scale(domain=[0, issue_counts["Count"].max() + 1])),
+        tooltip=["Issue Type", "Count"]
+    ).properties(
+    width=600,
+    height=400
+    )
+
+st.altair_chart(bar_chart, use_container_width=True)
+
 
     st.subheader("Actions Over Time")
     action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
