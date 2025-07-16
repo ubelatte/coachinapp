@@ -236,39 +236,43 @@ Description: {description}
         with col2:
             st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{employee}_leadership.docx")
 
-with tab2:
-    st.header("📊 Coaching Trend Dashboard")
+try:
+    df = pd.read_csv(sheet_url)
+    df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
 
-    sheet_url = st.secrets["sheet_config"].get("sheet_csv_url")
+    # === Date Range Filter ===
+    min_date = df["Date of Incident"].min()
+    max_date = df["Date of Incident"].max()
+    start_date, end_date = st.date_input("Filter by Date Range", [min_date, max_date], key="date_range_filter")
 
-    try:
-        df = pd.read_csv(sheet_url)
-        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
+    if start_date and end_date:
+        df = df[(df["Date of Incident"] >= pd.to_datetime(start_date)) & (df["Date of Incident"] <= pd.to_datetime(end_date))]
 
-        filter_action = st.selectbox(
-            "Filter by Action Taken",
-            ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
-            key="trend_action_filter"
-        )
-        if filter_action != "All":
-            df = df[df["Action to be Taken"] == filter_action]
+    # === Action Taken Filter ===
+    filter_action = st.selectbox(
+        "Filter by Action Taken",
+        ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
+        key="trend_action_filter"
+    )
+    if filter_action != "All":
+        df = df[df["Action to be Taken"] == filter_action]
 
-        st.dataframe(df)
+    st.dataframe(df)
 
-        st.subheader("Issue Type Count")
-        issue_counts = df["Issue Type"].value_counts()
-        st.bar_chart(issue_counts)
+    st.subheader("Issue Type Count")
+    issue_counts = df["Issue Type"].value_counts()
+    st.bar_chart(issue_counts)
 
-        st.subheader("Actions Over Time")
-        action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
-        st.line_chart(action_time)
+    st.subheader("Actions Over Time")
+    action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
+    st.line_chart(action_time)
 
-        # === GPT Trend Summary ===
-        st.subheader("🔍 AI-Powered Trend Summary")
-        with st.spinner("Analyzing trends with GPT..."):
-            csv_data = df.to_csv(index=False)
+    # === GPT Trend Summary ===
+    st.subheader("🔍 AI-Powered Trend Summary")
+    with st.spinner("Analyzing trends with GPT..."):
+        csv_data = df.to_csv(index=False)
 
-            trend_prompt = f"""
+        trend_prompt = f"""
 You are a workplace performance analyst. Analyze the following coaching data and provide:
 1. Trends in issue types, departments, and action levels
 2. Repeat or high-risk employees
@@ -277,15 +281,15 @@ You are a workplace performance analyst. Analyze the following coaching data and
 CSV Data:
 {csv_data}
 """
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-            gpt_response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": trend_prompt}]
-            ).choices[0].message.content.strip()
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        gpt_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": trend_prompt}]
+        ).choices[0].message.content.strip()
 
-        st.markdown("#### GPT Coaching Trend Summary")
-        st.markdown(gpt_response)
+    st.markdown("#### GPT Coaching Trend Summary")
+    st.markdown(gpt_response)
 
-    except Exception as e:
-        st.warning("Could not load trend data.")
-        st.text(str(e))
+except Exception as e:
+    st.warning("Could not load trend data.")
+    st.text(str(e))
