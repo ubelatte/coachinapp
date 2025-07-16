@@ -239,7 +239,8 @@ Description: {description}
 with tab2:
     st.header("📊 Coaching Trend Dashboard")
 
-    sheet_url = st.secrets.get("sheet_csv_url")  # or use public CSV URL from Sheets
+    sheet_url = st.secrets["sheet_config"]["sheet_csv_url"]
+    df = pd.read_csv(sheet_url)
     try:
         df = pd.read_csv(sheet_url)
         df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
