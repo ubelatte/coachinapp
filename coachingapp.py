@@ -3,34 +3,25 @@ from openai import OpenAI
 from docx import Document
 from docx.shared import Pt
 from io import BytesIO
-from datetime import date, datetime
+from datetime import date
 import time
+import requests
 import pandas as pd
-import gspread
-from google.oauth2 import service_account
+import matplotlib.pyplot as plt
 
-# === GOOGLE SHEET CONFIG ===
-GSHEET_NAME = "Coaching Assessment Form"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-creds = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"], scopes=SCOPES)
-client_gs = gspread.authorize(creds)
-sheet = client_gs.open(GSHEET_NAME).sheet1
+# === PAGE CONFIG ===
+st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
-# === PAGE SETTINGS ===
-st.set_page_config(page_title="Mestek Coaching Generator", page_icon=None)
-st.title("📄 Mestek AI Coaching Generator")
-
-# === PASSWORD PROTECTION ===
+# === PASSWORD ===
 PASSWORD = "WFHQmestek413"
 if st.text_input("Enter password:", type="password") != PASSWORD:
-    st.warning("Please type the correct password and hit Enter.")
+    st.warning("Please enter the correct password.")
     st.stop()
 
-# === NAVIGATION ===
-tab = st.radio("Choose a tab:", ["Generate Coaching Docs", "📊 Trend Dashboard"])
+# === GOOGLE SCRIPT URL (already provided) ===
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzphJdM4C4-fQ8OS1Q_2eW7sXsC12MKPthejioPoDg_gnUlImkzOcKJM5_ndk9KzQewNg/exec"
 
-# === HELPERS ===
+# === DOCX HELPERS ===
 def add_bold_para(doc, label, value):
     para = doc.add_paragraph()
     run = para.add_run(label)
@@ -66,8 +57,12 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
 
     doc.add_heading("Section 1 – Supervisor Entry", level=1)
-    for label in latest:
-        add_bold_para(doc, f"{label}:", latest[label])
+    for field in [
+        "Date of Incident", "Department", "Employee Name", "Supervisor Name",
+        "Action Taken", "Issue Type", "Incident Description", "Estimated/Annual Cost",
+        "Language Spoken", "Previous Coaching/Warnings"
+    ]:
+        add_bold_para(doc, field + ":", latest[field])
 
     doc.add_page_break()
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
@@ -80,8 +75,7 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph(
         "I understand that this document serves as a formal record of the counseling provided. "
         "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation."
-    )
+        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
@@ -89,45 +83,64 @@ def build_coaching_doc(latest, coaching_dict):
 def build_leadership_doc(latest, leadership_text):
     doc = Document()
     doc.add_heading("Leadership Reflection", 0)
-    for label in ["Supervisor Name", "Employee Name", "Department", "Issue Type", "Date of Incident"]:
-        add_bold_para(doc, f"{label}:", latest[label])
+    for field in ["Supervisor Name", "Employee Name", "Department", "Issue Type", "Date of Incident"]:
+        add_bold_para(doc, field + ":", latest[field])
     doc.add_paragraph()
     add_section_header(doc, "AI-Generated Leadership Guidance:")
 
-    sections = ["Private Reflection", "Coaching Tips", "Tone Guidance", "Follow-Up Recommendation", "Supervisor Accountability Tip"]
+    sections = [
+        "Private Reflection", "Coaching Tips", "Tone Guidance",
+        "Follow-Up Recommendation", "Supervisor Accountability Tip"
+    ]
     current_title = None
     buffer = []
-    lines = leadership_text.splitlines()
-    for line in lines + [""]:
+    for line in leadership_text.splitlines() + [""]:
         stripped = line.strip()
         if stripped.endswith(":") and stripped[:-1] in sections:
             if current_title and buffer:
                 doc.add_paragraph()
-                para = doc.add_paragraph()
-                para.add_run(current_title + ":").bold = True
-                for para_text in buffer:
-                    doc.add_paragraph(para_text.strip())
+                run = doc.add_paragraph().add_run(current_title + ":")
+                run.bold = True
+                for para in buffer:
+                    doc.add_paragraph(para.strip())
                 buffer = []
             current_title = stripped[:-1]
         elif current_title:
             buffer.append(stripped)
     if current_title and buffer:
         doc.add_paragraph()
-        para = doc.add_paragraph()
-        para.add_run(current_title + ":").bold = True
-        for para_text in buffer:
-            doc.add_paragraph(para_text.strip())
+        run = doc.add_paragraph().add_run(current_title + ":")
+        run.bold = True
+        for para in buffer:
+            doc.add_paragraph(para.strip())
+
     return doc
 
-# === MAIN FORM ===
-if tab == "Generate Coaching Docs":
+# === TABS ===
+tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
+
+with tab1:
     with st.form("coaching_form"):
-        supervisor = st.selectbox("Supervisor Name", ["Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John", "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
+        supervisor = st.selectbox("Supervisor Name", [
+            "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
+            "Janitza", "Fundi", "Lisa", "Dave", "Dean"
+        ])
         employee = st.text_input("Employee Name")
-        department = st.selectbox("Department", ["Rough In", "Paint Line (NP)", "Commercial Fabrication", "Baseboard Accessories", "Maintenance", "Residential Fabrication", "Residential Assembly/Packing", "Warehouse (55WIPR)", "Convector & Twin Flo", "Shipping/Receiving/Drivers", "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"])
+        department = st.selectbox("Department", [
+            "Rough In", "Paint Line (NP)", "Commercial Fabrication",
+            "Baseboard Accessories", "Maintenance", "Residential Fabrication",
+            "Residential Assembly/Packing", "Warehouse (55WIPR)",
+            "Convector & Twin Flo", "Shipping/Receiving/Drivers",
+            "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"
+        ])
         incident_date = st.date_input("Date of Incident", value=date.today())
-        issue_type = st.selectbox("Issue Type", ["Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"])
-        action_taken = st.selectbox("Action to be Taken", ["Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
+        issue_type = st.selectbox("Issue Type", [
+            "Attendance", "Safety", "Behavior", "Performance",
+            "Policy Violation", "Recognition"
+        ])
+        action_taken = st.selectbox("Action to be Taken", [
+            "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"
+        ])
         description = st.text_area("Incident Description")
         estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
         language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
@@ -137,20 +150,22 @@ if tab == "Generate Coaching Docs":
 
     if submitted:
         latest = {
+            "Timestamp": date.today().isoformat(),
+            "Email Address": st.session_state.get("email", "N/A"),
             "Supervisor Name": supervisor,
             "Employee Name": employee,
             "Department": department,
             "Date of Incident": incident_date.strftime("%Y-%m-%d"),
             "Issue Type": issue_type,
-            "Action Taken": action_taken,
+            "Action to be Taken": action_taken,
             "Incident Description": description,
-            "Estimated/Annual Cost": estimated_cost or "N/A",
+            "Estimated/Annual Cost": estimated_cost,
             "Language Spoken": language,
-            "Previous Coaching/Warnings": previous,
+            "Previous Coaching/Warnings": previous
         }
 
-        prompt_coaching = f"""
-You are a workplace coaching assistant. Using the data below, generate a Workplace Coaching Report with the following sections:
+        coaching_prompt = f"""
+You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
 Incident Summary:
 Expectations Going Forward:
 Tags:
@@ -165,10 +180,15 @@ Issue Type: {issue_type}
 Action Taken: {action_taken}
 Description: {description}
 """
+        leadership_prompt = f"""
+You are a leadership coach. Write a private reflection including:
+Private Reflection:
+Coaching Tips:
+Tone Guidance:
+Follow-Up Recommendation:
+Supervisor Accountability Tip:
 
-        prompt_leadership = f"""
-You are a leadership coach. Using the data below, generate a private reflection including coaching tips, tone guidance, follow-up recommendation, and a supervisor accountability tip.
-
+Info:
 Supervisor: {supervisor}
 Employee: {employee}
 Department: {department}
@@ -176,52 +196,25 @@ Issue Type: {issue_type}
 Description: {description}
 """
 
-        client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
-        with st.spinner("🤖 Generating coaching & leadership insights..."):
-            coaching_response = client_openai.chat.completions.create(
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        with st.spinner("Generating documents..."):
+            coaching_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful HR assistant."},
-                    {"role": "user", "content": prompt_coaching},
-                ],
-                temperature=0.7,
+                messages=[{"role": "user", "content": coaching_prompt}],
             ).choices[0].message.content.strip()
 
-            if language.strip().lower() != "english":
-                translation_prompt = f"Translate the following into {language.title()} professionally:\n{coaching_response}"
-                coaching_response = client_openai.chat.completions.create(
+            if language.lower() != "english":
+                coaching_response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You translate workplace HR documents professionally."},
-                        {"role": "user", "content": translation_prompt},
-                    ],
-                    temperature=0.3,
+                    messages=[{"role": "user", "content": f"Translate into {language}:\n{coaching_response}"}],
                 ).choices[0].message.content.strip()
 
-            coaching_sections = parse_coaching_sections(coaching_response)
-
-            leadership_response = client_openai.chat.completions.create(
+            leadership_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a leadership coach."},
-                    {"role": "user", "content": prompt_leadership},
-                ],
-                temperature=0.7,
+                messages=[{"role": "user", "content": leadership_prompt}],
             ).choices[0].message.content.strip()
 
-        # Log to Google Sheet
-        sheet.append_row([
-            datetime.now().isoformat(),  # Timestamp
-            st.session_state.get('email', ""),  # Email (optional)
-            supervisor, employee, department,
-            incident_date.strftime("%Y-%m-%d"),
-            issue_type, action_taken, description,
-            estimated_cost, language, previous
-        ])
-
-        # Generate DOCX
-        timestamp = int(time.time())
-        employee_name_clean = employee.replace(" ", "_")
+        coaching_sections = parse_coaching_sections(coaching_response)
         coaching_io = BytesIO()
         build_coaching_doc(latest, coaching_sections).save(coaching_io)
         coaching_io.seek(0)
@@ -230,28 +223,41 @@ Description: {description}
         build_leadership_doc(latest, leadership_response).save(leadership_io)
         leadership_io.seek(0)
 
-        st.success("✅ Coaching documents ready:")
+        # === Submit to Google Sheet ===
+        try:
+            requests.post(SCRIPT_URL, data=latest)
+        except Exception as e:
+            st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
+
+        # === Download Buttons ===
         col1, col2 = st.columns(2)
         with col1:
-            st.download_button("Download Coaching Doc", data=coaching_io,
-                               file_name=f"coaching_{employee_name_clean}_{timestamp}.docx")
+            st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{employee}_coaching.docx")
         with col2:
-            st.download_button("Download Leadership Doc", data=leadership_io,
-                               file_name=f"leadership_{employee_name_clean}_{timestamp}.docx")
+            st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{employee}_leadership.docx")
 
-# === TREND DASHBOARD ===
-elif tab == "📊 Trend Dashboard":
-    st.subheader("Coaching Entry Summary")
-    data = pd.DataFrame(sheet.get_all_records())
-    if data.empty:
-        st.info("No coaching entries yet.")
-    else:
-        data["Date of Incident"] = pd.to_datetime(data["Date of Incident"], errors="coerce")
-        filter_action = st.selectbox("Filter by Action Taken", ["All"] + sorted(data["Action to be Taken"].unique()))
+with tab2:
+    st.header("📊 Coaching Trend Dashboard")
+
+    sheet_url = st.secrets.get("sheet_csv_url")  # or use public CSV URL from Sheets
+    try:
+        df = pd.read_csv(sheet_url)
+        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
+
+        filter_action = st.selectbox("Filter by Action Taken", ["All"] + df["Action to be Taken"].dropna().unique().tolist())
         if filter_action != "All":
-            data = data[data["Action to be Taken"] == filter_action]
+            df = df[df["Action to be Taken"] == filter_action]
 
-        st.dataframe(data.sort_values("Date of Incident", ascending=False))
+        st.dataframe(df)
 
-        st.write("### 📈 Summary")
-        st.write(data.groupby("Action to be Taken").size().rename("Count").reset_index())
+        st.subheader("Issue Type Count")
+        issue_counts = df["Issue Type"].value_counts()
+        st.bar_chart(issue_counts)
+
+        st.subheader("Actions Over Time")
+        action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
+        st.line_chart(action_time)
+
+    except Exception as e:
+        st.warning("Could not load trend data.")
+        st.text(str(e))
