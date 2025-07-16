@@ -283,7 +283,8 @@ try:
 
 
     st.subheader("Actions Over Time")
-    action_time = df.groupby(["Date of Incident", "Action to be Taken"]).size().unstack(fill_value=0)
+    df["Date Only"] = df["Date of Incident"].dt.date  # removes time part
+    action_time = df.groupby(["Date Only", "Action to be Taken"]).size().unstack(fill_value=0)
     st.line_chart(action_time)
 
     # === GPT Trend Summary ===
