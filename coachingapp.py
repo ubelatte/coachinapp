@@ -42,7 +42,7 @@ with st.form("coaching_form"):
     estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
     language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
     language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
-    previous = st.radio("Previous Coaching/Warnings", ["Yes", "No"])
+    previous = st.text_area("Previous Coaching/Warnings (if any)", placeholder="e.g., Verbal warning issued on 7/1 for tardiness.")
     submitted = st.form_submit_button("Generate Coaching Report")
 
 # === DOCX HELPERS ===
