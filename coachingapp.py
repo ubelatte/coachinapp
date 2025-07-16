@@ -235,6 +235,11 @@ Description: {description}
             st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{employee}_coaching.docx")
         with col2:
             st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{employee}_leadership.docx")
+with tab2:
+    st.header("📊 Coaching Trend Dashboard")
+
+    # ✅ DEFINE IT BEFORE USING IT
+    sheet_url = st.secrets["sheet_config"].get("sheet_csv_url")
 
 try:
     df = pd.read_csv(sheet_url)
