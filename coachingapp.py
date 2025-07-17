@@ -19,6 +19,7 @@ if "reset_form" in st.session_state:
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
 # === PASSWORD ===
+# === AFTER PASSWORD CHECK ===
 PASSWORD = "WFHQmestek413"
 if st.text_input("Enter password:", type="password") != PASSWORD:
     st.warning("Please enter the correct password.")
@@ -26,6 +27,9 @@ if st.text_input("Enter password:", type="password") != PASSWORD:
 
 # === GOOGLE SCRIPT URL ===
 SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzphJdM4C4-fQ8OS1Q_2eW7sXsC12MKPthejioPoDg_gnUlImkzOcKJM5_ndk9KzQewNg/exec"
+
+# ✅ FIX: MAKE OPENAI CLIENT AVAILABLE TO ALL TABS
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # === HELPER FUNCTIONS ===
 def add_bold_para(doc, label, value):
