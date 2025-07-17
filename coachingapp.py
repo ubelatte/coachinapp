@@ -8,7 +8,6 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from io import BytesIO
 import datetime
-import re
 
 # === PASSWORD GATE ===
 st.title("🔐 Secure Access")
@@ -45,118 +44,107 @@ except Exception as e:
 
 client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-# === AI FUNCTIONS ===
-def analyze_text(text):
-    prompt = f"Generate a coaching summary from this incident: {text}\nInclude expectations going forward."
-    try:
-        completion = client_openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-        )
-        return completion.choices[0].message.content.strip()
-    except Exception as e:
-        return f"(AI Error: {e})"
-
-# === DOCX GENERATION ===
-def create_doc(employee, supervisor, department, date, issue_type, action, description, cost, language, previous):
-    summary = analyze_text(description)
-    doc = Document()
-    doc.add_heading("Coaching Report", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-    fields = [
-        ("Employee Name:", employee),
-        ("Supervisor Name:", supervisor),
-        ("Department:", department),
-        ("Date of Incident:", date),
-        ("Issue Type:", issue_type),
-        ("Action to be Taken:", action),
-        ("Estimated/Annual Cost:", cost),
-        ("Language Spoken:", language),
-        ("Previous Coaching/Warnings:", previous),
-    ]
-    for label, value in fields:
-        p = doc.add_paragraph()
-        r1 = p.add_run(label + " ")
-        r1.bold = True
-        p.add_run(value)
-
-    doc.add_paragraph("\nIncident Description", style='Heading 2')
-    doc.add_paragraph(description)
-
-    doc.add_paragraph("\nAI-Generated Coaching Summary", style='Heading 2')
-    doc.add_paragraph(summary)
-
-    doc.add_paragraph("\nSign-Offs", style='Heading 2')
-    doc.add_paragraph("Employee Signature: ________________________________    Date: ____________")
-    doc.add_paragraph("Supervisor Signature: ________________________________  Date: ____________")
-
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer, summary
-
-# === UI FORM ===
-if 'submitted' not in st.session_state:
-    st.session_state.submitted = False
-
+# === FORM SETUP ===
+st.header("📝 Coaching Report Form")
 with st.form("coaching_form"):
     email = st.text_input("Email Address")
     supervisor = st.text_input("Supervisor Name")
     employee = st.text_input("Employee Name")
-    department = st.text_input("Department")
-    date = st.date_input("Date of Incident", value=datetime.date.today())
-    issue_type = st.selectbox("Issue Type", ["Performance", "Behavior", "Attendance", "Other"])
-    action = st.selectbox("Action to be Taken", ["Coaching", "Verbal Warning", "Written Warning", "Final Warning"])
+    department = st.selectbox("Department", [
+        "Commercial Fabrication", "Baseboard Accessories", "Maintenance",
+        "Residential Fabrication", "Residential Assembly/Packing", "Warehouse (55WIPR)",
+        "Convector & Twin Flo", "Shipping/Receiving/Drivers", "Dadanco Fabrication/Assembly",
+        "Paint Line (Dadanco)"
+    ])
+    date_incident = st.date_input("Date of Incident")
+    issue_type = st.text_input("Issue Type")
+    action_taken = st.text_input("Action to be Taken")
     description = st.text_area("Incident Description")
     cost = st.text_input("Estimated/Annual Cost")
     language = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
     previous = st.text_area("Previous Coaching/Warnings")
     submitted = st.form_submit_button("Generate Coaching Report")
 
-    if submitted and all([email, supervisor, employee, department, description]):
-        st.session_state.submitted = True
-        st.session_state.data = {
-            "email": email,
-            "supervisor": supervisor,
-            "employee": employee,
-            "department": department,
-            "date": str(date),
-            "issue_type": issue_type,
-            "action": action,
-            "description": description,
-            "cost": cost,
-            "language": language,
-            "previous": previous
-        }
+# === AI + DOCX GENERATION ===
+def generate_coaching_doc():
+    prompt = f"""
+You are an HR analyst helping a supervisor document a coaching session. Based on the following information:
 
-# === LOGGING + DOWNLOAD ===
-if st.session_state.submitted:
-    data = st.session_state.data
-    docx_file, ai_summary = create_doc(
-        data["employee"], data["supervisor"], data["department"], data["date"],
-        data["issue_type"], data["action"], data["description"],
-        data["cost"], data["language"], data["previous"]
-    )
+Employee: {employee}
+Supervisor: {supervisor}
+Department: {department}
+Date of Incident: {date_incident}
+Issue Type: {issue_type}
+Action to be Taken: {action_taken}
+Incident Description: {description}
+Previous Coaching: {previous}
 
-    timestamp = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    row = [
-        timestamp, data["email"], data["supervisor"], data["employee"],
-        data["department"], data["date"], data["issue_type"],
-        data["action"], data["description"], data["cost"],
-        data["language"], data["previous"]
-    ]
+Generate a 1-paragraph coaching summary and clear expectations moving forward. End with a brief coaching tone reminder.
+"""
     try:
-        sheet.append_row(row, value_input_option="USER_ENTERED")
-        st.success("✅ Entry logged to Google Sheet")
+        response = client_openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        st.error(f"❌ Failed to log entry: {e}")
+        return f"(AI generation failed: {e})"
 
-    st.download_button(
-        label="📄 Download Coaching Report",
-        data=docx_file,
-        file_name=f"{data['employee'].replace(' ', '_')}_Coaching_Report.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
+def create_doc(content):
+    doc = Document()
+    doc.add_heading("Employee Coaching Form", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    st.session_state.submitted = False
+    section = doc.add_paragraph()
+    for label, value in [
+        ("Employee Name:", employee),
+        ("Supervisor Name:", supervisor),
+        ("Department:", department),
+        ("Date of Incident:", str(date_incident)),
+        ("Issue Type:", issue_type),
+        ("Action to be Taken:", action_taken),
+        ("Estimated/Annual Cost:", cost),
+        ("Language Spoken:", language),
+        ("Previous Coaching/Warnings:", previous)
+    ]:
+        run = section.add_run(f"{label} ")
+        run.bold = True
+        section.add_run(f"{value}\n")
+
+    doc.add_heading("AI-Generated Coaching Summary", level=2)
+    doc.add_paragraph(content)
+
+    doc.add_paragraph("\nAcknowledgment:", style='Heading 2')
+    doc.add_paragraph("Employee Signature: _________________________    Date: ____________")
+    doc.add_paragraph("Supervisor Signature: _______________________  Date: ____________")
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+# === SHEET LOGGING ===
+def log_to_sheet():
+    row = [
+        datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"), email, supervisor, employee,
+        department, str(date_incident), issue_type, action_taken, description,
+        cost, language, previous
+    ] + ["" for _ in range(12)]  # Empty columns to match existing header spacing
+    sheet.append_row(row, value_input_option="USER_ENTERED")
+
+# === FORM SUBMISSION ===
+if submitted:
+    if not all([employee, supervisor, description]):
+        st.error("Please complete all required fields.")
+    else:
+        summary = generate_coaching_doc()
+        file = create_doc(summary)
+        log_to_sheet()
+
+        st.success("✅ Coaching report generated and saved!")
+        st.download_button(
+            label="📄 Download Coaching Report",
+            data=file,
+            file_name=f"{employee}_Coaching_Report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
