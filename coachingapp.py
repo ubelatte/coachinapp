@@ -254,9 +254,14 @@ if st.session_state.get("generated", False):
                            file_name=f"{st.session_state.safe_name}_leadership.docx")
 
     if st.button("🔄 Submit Another Form"):
-        st.session_state.submitted = False
-        st.session_state.generated = False
-        st.session_state.latest = {}
+        keys_to_clear = [
+            "submitted", "generated", "latest",
+            "coaching_io", "leadership_io", "safe_name"
+        ]
+        for key in keys_to_clear:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
 
 
 
