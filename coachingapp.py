@@ -1,184 +1,306 @@
-# Full working Streamlit coaching app script with coaching + leadership reports, form submission, and trend dashboard.
-# ✅ Preserves original functionality
-# ✅ Fixes disappearing buttons
-# ✅ Logs to Coaching Assessment Form
-# ✅ Includes department dropdown
-# ✅ Auto-adds expectations into report
-# ✅ Tabs: Coaching Form + Trend Dashboard
-
 import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
 from openai import OpenAI
 from docx import Document
 from docx.shared import Pt
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from io import BytesIO
-import datetime
+from datetime import date
+import requests
 import pandas as pd
-import re
+import matplotlib.pyplot as plt
 
-# === PASSWORD GATE ===
-st.set_page_config(page_title="Mestek Coaching App", layout="wide")
-st.title("🔐 Secure Access")
+# === PAGE CONFIG ===
+st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
+
+# === PASSWORD ===
 PASSWORD = "WFHQmestek413"
-
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if not st.session_state.authenticated:
-    with st.form("password_form"):
-        input_password = st.text_input("Enter password", type="password")
-        unlock = st.form_submit_button("Unlock")
-    if unlock:
-        if input_password == PASSWORD:
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("Incorrect password. Please try again.")
+if st.text_input("Enter password:", type="password") != PASSWORD:
+    st.warning("Please enter the correct password.")
     st.stop()
 
-# === GOOGLE SHEET + OPENAI SETUP ===
-st.success("Access granted!")
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
-client = gspread.authorize(creds)
+# === GOOGLE SCRIPT URL ===
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzphJdM4C4-fQ8OS1Q_2eW7sXsC12MKPthejioPoDg_gnUlImkzOcKJM5_ndk9KzQewNg/exec"
 
-try:
-    sheet = client.open("Coaching Assessment Form").sheet1
-    st.success("✅ Connected to Coaching Assessment Form")
-except Exception as e:
-    st.error(f"❌ Sheet error: {e}")
+# === DOCX HELPERS ===
+def add_bold_para(doc, label, value):
+    para = doc.add_paragraph()
+    run = para.add_run(label)
+    run.bold = True
+    para.add_run(f" {value}")
 
-client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
+def add_section_header(doc, text):
+    para = doc.add_paragraph()
+    run = para.add_run(text)
+    run.bold = True
+    run.font.size = Pt(12)
 
-# === FORM PROMPTS ===
-prompts = [
-    ("Feedback & Conflict Resolution", "How does this employee typically respond to feedback — especially when it differs from their own opinion? Do they apply it constructively, and do they help others do the same when it comes to resolving conflict and promoting cooperation?"),
-    ("Communication & Team Support", "How effectively does this employee communicate with others? How well does this employee support their team - including their willingness to shift focus, assist other teams, or go beyond their assigned duties?"),
-    ("Reliability & Productivity", "How reliable is this employee in terms of attendance and use of time? Does this employee consistently meet or exceed productivity standards, follow company policies, and actively contribute ideas for improving standard work?"),
-    ("Adaptability & Quality Focus", "When your team encounters workflow disruptions or shifting priorities, how does this employee typically respond? How does this employee contribute to maintaining and improving product quality?"),
-    ("Safety Commitment", "In what ways does this employee demonstrate commitment to safety and workplace organization?"),
-    ("Documentation & Procedures", "How effectively does this employee use technical documentation and operate equipment according to established procedures?")
-]
+def parse_coaching_sections(raw_text):
+    sections = {}
+    current_section = None
+    buffer = []
+    for line in raw_text.splitlines():
+        line = line.strip()
+        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+            if current_section and buffer:
+                sections[current_section] = " ".join(buffer).strip()
+                buffer = []
+            current_section = line[:-1]
+        elif current_section:
+            buffer.append(line)
+    if current_section and buffer:
+        sections[current_section] = " ".join(buffer).strip()
+    return sections
 
-# === ANALYSIS ===
-def analyze_feedback(category, response):
-    prompt = f"You are an HR analyst. Rate the employee's response on '{category}' from 1 to 5. Then summarize in 1–2 sentences. Format: Rating: X/5\nSummary: ...\n\nResponse: {response}"
-    try:
-        result = client_openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return result.choices[0].message.content.strip()
-    except Exception as e:
-        return f"Rating: 3/5\nSummary: AI error: {e}"
-
-def summarize_overall(employee_name, feedbacks):
-    joined = "\n\n".join(feedbacks)
-    prompt = f"Summarize overall performance for {employee_name}. Include strengths, improvement areas, and an overall performance score (e.g. Overall performance score: 4.2/5).\n\n{joined}"
-    try:
-        result = client_openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return result.choices[0].message.content.strip()
-    except Exception as e:
-        return f"(Summary unavailable: {e})"
-
-# === REPORTS ===
-def create_report(doc_type, data, scores, explanations, summary):
+def build_coaching_doc(latest, coaching_dict):
     doc = Document()
-    doc.add_heading(f"MESTEK – {doc_type} Report", 0).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    doc.add_heading("Employee Coaching & Counseling Form", 0)
+    doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
 
-    doc.add_heading("Employee Info", level=2)
-    for label in ["Employee Name", "Supervisor Name", "Department", "Date of Incident", "Issue Type", "Action to be Taken", "Estimated/Annual Cost"]:
-        run = doc.add_paragraph()
-        r1 = run.add_run(f"{label}: ")
-        r1.bold = True
-        run.add_run(str(data[label]))
+    doc.add_heading("Section 1 – Supervisor Entry", level=1)
+    for field in [
+        "Date of Incident", "Department", "Employee Name", "Supervisor Name",
+        "Action Taken", "Issue Type", "Incident Description", "Estimated/Annual Cost",
+        "Language Spoken", "Previous Coaching/Warnings"
+    ]:
+        add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
 
-    doc.add_heading("Coaching Prompts", level=2)
-    table = doc.add_table(rows=1, cols=3)
-    table.style = 'Table Grid'
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.rows[0].cells[0].text = "Category"
-    table.rows[0].cells[1].text = "Rating"
-    table.rows[0].cells[2].text = "Explanation"
+    doc.add_page_break()
+    doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
+    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+        if section in coaching_dict:
+            add_section_header(doc, section + ":")
+            doc.add_paragraph(coaching_dict[section])
 
-    for cat, score, note in zip([p[0] for p in prompts], scores, explanations):
-        row = table.add_row().cells
-        row[0].text = cat
-        row[1].text = score
-        row[2].text = note
+    doc.add_paragraph("\nAcknowledgment of Receipt:")
+    doc.add_paragraph(
+        "I understand that this document serves as a formal record of the counseling provided. "
+        "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
+        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
+    doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
+    doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
+    return doc
 
-    doc.add_heading("Performance Summary", level=2)
-    doc.add_paragraph(summary)
+def build_leadership_doc(latest, leadership_text):
+    doc = Document()
+    doc.add_heading("Leadership Reflection", 0)
+    for field in ["Supervisor Name", "Employee Name", "Department", "Issue Type", "Date of Incident"]:
+        add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
+    doc.add_paragraph()
+    add_section_header(doc, "AI-Generated Leadership Guidance:")
 
-    doc.add_heading("Expectations Going Forward", level=2)
-    for i in range(3):
-        doc.add_paragraph(f"{i+1}. " + "_" * 100 + "\n    " + "_" * 100)
+    sections = [
+        "Private Reflection", "Coaching Tips", "Tone Guidance",
+        "Follow-Up Recommendation", "Supervisor Accountability Tip"
+    ]
+    current_title = None
+    buffer = []
+    for line in leadership_text.splitlines() + [""]:
+        stripped = line.strip()
+        if stripped.endswith(":") and stripped[:-1] in sections:
+            if current_title and buffer:
+                doc.add_paragraph()
+                run = doc.add_paragraph().add_run(current_title + ":")
+                run.bold = True
+                for para in buffer:
+                    doc.add_paragraph(para.strip())
+                buffer = []
+            current_title = stripped[:-1]
+        elif current_title:
+            buffer.append(stripped)
+    if current_title and buffer:
+        doc.add_paragraph()
+        run = doc.add_paragraph().add_run(current_title + ":")
+        run.bold = True
+        for para in buffer:
+            doc.add_paragraph(para.strip())
 
-    doc.add_heading("Sign-Off", level=2)
-    doc.add_paragraph("Employee Signature: ___________________    Date: __________")
-    doc.add_paragraph("Supervisor Signature: __________________    Date: __________")
+    return doc
 
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+# === TABS ===
+tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
 
-# === MAIN APP ===
-tabs = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
-
-with tabs[0]:
-    st.header("Coaching Report Generator")
+with tab1:
     with st.form("coaching_form"):
-        form_data = {}
-        form_data["Supervisor Name"] = st.text_input("Supervisor Name")
-        form_data["Employee Name"] = st.text_input("Employee Name")
-        form_data["Department"] = st.selectbox("Department", [
-            "Commercial Fabrication", "Baseboard Accessories", "Maintenance", "Residential Fabrication",
-            "Residential Assembly/Packing", "Warehouse (55WIPR)", "Convector & Twin Flo",
-            "Shipping/Receiving/Drivers", "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"
+        supervisor = st.selectbox("Supervisor Name", [
+            "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
+            "Janitza", "Fundi", "Lisa", "Dave", "Dean"
         ])
-        form_data["Date of Incident"] = st.date_input("Date of Incident", value=datetime.date.today())
-        form_data["Issue Type"] = st.text_input("Issue Type")
-        form_data["Action to be Taken"] = st.text_input("Action to be Taken")
-        form_data["Incident Description"] = st.text_area("Incident Description")
-        form_data["Estimated/Annual Cost"] = st.text_input("Estimated/Annual Cost")
-        form_data["Language Spoken"] = st.text_input("Language Spoken")
-        form_data["Previous Coaching/Warnings"] = st.text_input("Previous Coaching/Warnings")
-
-        responses = [st.text_area(q, key=f"resp_{i}") for i, (_, q) in enumerate(prompts)]
-        submitted = st.form_submit_button("Generate Reports")
+        employee = st.text_input("Employee Name")
+        department = st.selectbox("Department", [
+            "Rough In", "Paint Line (NP)", "Commercial Fabrication",
+            "Baseboard Accessories", "Maintenance", "Residential Fabrication",
+            "Residential Assembly/Packing", "Warehouse (55WIPR)",
+            "Convector & Twin Flo", "Shipping/Receiving/Drivers",
+            "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"
+        ])
+        incident_date = st.date_input("Date of Incident", value=date.today())
+        issue_type = st.selectbox("Issue Type", [
+            "Attendance", "Safety", "Behavior", "Performance",
+            "Policy Violation", "Recognition"
+        ])
+        action_taken = st.selectbox("Action to be Taken", [
+            "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"
+        ])
+        description = st.text_area("Incident Description")
+        estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
+        language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
+        language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
+        previous = st.text_area("Previous Coaching/Warnings (if any)", placeholder="e.g., Verbal warning issued on 7/1 for tardiness.")
+        submitted = st.form_submit_button("Generate Coaching Report")
 
     if submitted:
-        ai_results = [analyze_feedback(cat, resp) for (cat, _), resp in zip(prompts, responses)]
-        scores = [re.search(r"Rating: (\d)/5", r).group(1) if re.search(r"Rating: (\d)/5", r) else "3" for r in ai_results]
-        summaries = [re.search(r"Summary: (.*)", r).group(1) if re.search(r"Summary: (.*)", r) else r for r in ai_results]
-        overall = summarize_overall(form_data["Employee Name"], ai_results)
+        latest = {
+            "Timestamp": date.today().isoformat(),
+            "Email Address": st.session_state.get("email", "N/A"),
+            "Supervisor Name": supervisor,
+            "Employee Name": employee,
+            "Department": department,
+            "Date of Incident": incident_date.strftime("%Y-%m-%d"),
+            "Issue Type": issue_type,
+            "Action to be Taken": action_taken,
+            "Incident Description": description,
+            "Estimated/Annual Cost": estimated_cost,
+            "Language Spoken": language,
+            "Previous Coaching/Warnings": previous
+        }
 
-        log_row = [datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ""] + [form_data.get(h, "") for h in [
-            "Supervisor Name", "Employee Name", "Department", "Date of Incident", "Issue Type", "Action to be Taken",
-            "Incident Description", "Estimated/Annual Cost", "Language Spoken", "Previous Coaching/Warnings"
-        ]] + scores + ["/".join(scores), overall, "✔️"]
-        sheet.append_row(log_row)
+        coaching_prompt = f"""
+You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
+Incident Summary:
+Expectations Going Forward:
+Tags:
+Severity:
+
+Data:
+Supervisor: {supervisor}
+Employee: {employee}
+Department: {department}
+Date of Incident: {incident_date}
+Issue Type: {issue_type}
+Action Taken: {action_taken}
+Description: {description}
+"""
+        leadership_prompt = f"""
+You are a leadership coach. Write a private reflection including:
+Private Reflection:
+Coaching Tips:
+Tone Guidance:
+Follow-Up Recommendation:
+Supervisor Accountability Tip:
+
+Info:
+Supervisor: {supervisor}
+Employee: {employee}
+Department: {department}
+Issue Type: {issue_type}
+Description: {description}
+"""
+
+        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+        with st.spinner("Generating documents..."):
+            coaching_response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": coaching_prompt}],
+            ).choices[0].message.content.strip()
+
+            if language.lower() != "english":
+                coaching_response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": f"Translate into {language}:\n{coaching_response}"}],
+                ).choices[0].message.content.strip()
+
+            leadership_response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": leadership_prompt}],
+            ).choices[0].message.content.strip()
+
+        coaching_sections = parse_coaching_sections(coaching_response)
+        coaching_io = BytesIO()
+        build_coaching_doc(latest, coaching_sections).save(coaching_io)
+        coaching_io.seek(0)
+
+        leadership_io = BytesIO()
+        build_leadership_doc(latest, leadership_response).save(leadership_io)
+        leadership_io.seek(0)
+
+        try:
+            requests.post(SCRIPT_URL, data=latest)
+        except Exception as e:
+            st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
 
         col1, col2 = st.columns(2)
         with col1:
-            coaching_doc = create_report("Coaching", form_data, scores, summaries, overall)
-            st.download_button("📥 Download Coaching Report", data=coaching_doc, file_name="Coaching_Report.docx")
+            st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{employee}_coaching.docx")
         with col2:
-            leadership_doc = create_report("Leadership Reflection", form_data, scores, summaries, overall)
-            st.download_button("📥 Download Leadership Report", data=leadership_doc, file_name="Leadership_Reflection.docx")
+            st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{employee}_leadership.docx")
 
-with tabs[1]:
+with tab2:
     st.header("📊 Coaching Trend Dashboard")
     try:
-        data = pd.DataFrame(sheet.get_all_records())
-        st.dataframe(data)
-        st.metric("Total Coaching Events", len(data))
-        st.bar_chart(data["Department"].value_counts())
+        sheet_url = st.secrets["sheet_config"].get("sheet_csv_url")
+        df = pd.read_csv(sheet_url)
+        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
+
+        min_date = df["Date of Incident"].min()
+        max_date = df["Date of Incident"].max()
+        start_date, end_date = st.date_input("Filter by Date Range", [min_date, max_date], key="date_range_filter")
+
+        if start_date and end_date:
+            df = df[(df["Date of Incident"] >= pd.to_datetime(start_date)) & (df["Date of Incident"] <= pd.to_datetime(end_date))]
+
+        filter_action = st.selectbox(
+            "Filter by Action Taken",
+            ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
+            key="trend_action_filter"
+        )
+        if filter_action != "All":
+            df = df[df["Action to be Taken"] == filter_action]
+
+        st.dataframe(df)
+
+        import altair as alt
+
+        st.subheader("Issue Type Count")
+        issue_counts = df["Issue Type"].value_counts().reset_index()
+        issue_counts.columns = ["Issue Type", "Count"]
+
+        bar_chart = alt.Chart(issue_counts).mark_bar().encode(
+            x=alt.X("Issue Type:N", sort="-y"),
+            y=alt.Y("Count:Q", scale=alt.Scale(domain=[0, issue_counts["Count"].max() + 1])),
+            tooltip=["Issue Type", "Count"]
+        ).properties(
+            width=600,
+            height=400
+        )
+
+        st.altair_chart(bar_chart, use_container_width=True)
+
+        st.subheader("Actions Over Time")
+        df["Date Only"] = df["Date of Incident"].dt.date
+        action_time = df.groupby(["Date Only", "Action to be Taken"]).size().unstack(fill_value=0)
+        st.line_chart(action_time)
+
+        st.subheader("🔍 AI-Powered Trend Summary")
+        with st.spinner("Analyzing trends with GPT..."):
+            csv_data = df.to_csv(index=False)
+
+            trend_prompt = f"""
+You are a workplace performance analyst. Analyze the following coaching data and provide:
+1. Trends in issue types, departments, and action levels
+2. Repeat or high-risk employees
+3. 3 key recommendations for supervisors
+
+CSV Data:
+{csv_data}
+"""
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+            gpt_response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": trend_prompt}]
+            ).choices[0].message.content.strip()
+
+        st.markdown("#### GPT Coaching Trend Summary")
+        st.markdown(gpt_response)
+
     except Exception as e:
-        st.error(f"Couldn't load dashboard: {e}")
+        st.warning("Could not load trend data.")
+        st.text(str(e))
