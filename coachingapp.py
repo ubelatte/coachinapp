@@ -115,6 +115,10 @@ def build_leadership_doc(latest, leadership_text):
 
     return doc
 
+# === FORM STATE ===
+if "submitted" not in st.session_state:
+    st.session_state.submitted = False
+
 # === TABS ===
 tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
 
@@ -148,9 +152,10 @@ with tab1:
         submitted = st.form_submit_button("Generate Coaching Report")
 
     if submitted:
-        latest = {
+        st.session_state.submitted = True
+        st.session_state.latest = {
             "Timestamp": date.today().isoformat(),
-            "Email Address": st.session_state.get("email", "N/A"),
+            "Email Address": "N/A",
             "Supervisor Name": supervisor,
             "Employee Name": employee,
             "Department": department,
@@ -163,7 +168,9 @@ with tab1:
             "Previous Coaching/Warnings": previous
         }
 
-        coaching_prompt = f"""
+if st.session_state.submitted:
+    latest = st.session_state.latest
+    coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
 Incident Summary:
 Expectations Going Forward:
@@ -171,15 +178,16 @@ Tags:
 Severity:
 
 Data:
-Supervisor: {supervisor}
-Employee: {employee}
-Department: {department}
-Date of Incident: {incident_date}
-Issue Type: {issue_type}
-Action Taken: {action_taken}
-Description: {description}
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Date of Incident: {latest['Date of Incident']}
+Issue Type: {latest['Issue Type']}
+Action Taken: {latest['Action to be Taken']}
+Description: {latest['Incident Description']}
 """
-        leadership_prompt = f"""
+
+    leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
 Private Reflection:
 Coaching Tips:
@@ -188,50 +196,50 @@ Follow-Up Recommendation:
 Supervisor Accountability Tip:
 
 Info:
-Supervisor: {supervisor}
-Employee: {employee}
-Department: {department}
-Issue Type: {issue_type}
-Description: {description}
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Issue Type: {latest['Issue Type']}
+Description: {latest['Incident Description']}
 """
 
-        client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-        with st.spinner("Generating documents..."):
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+    with st.spinner("Generating documents..."):
+        coaching_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": coaching_prompt}],
+        ).choices[0].message.content.strip()
+
+        if latest['Language Spoken'].lower() != "english":
             coaching_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": coaching_prompt}],
+                messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}\n{coaching_response}"}],
             ).choices[0].message.content.strip()
 
-            if language.lower() != "english":
-                coaching_response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": f"Translate into {language}:\n{coaching_response}"}],
-                ).choices[0].message.content.strip()
+        leadership_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": leadership_prompt}],
+        ).choices[0].message.content.strip()
 
-            leadership_response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": leadership_prompt}],
-            ).choices[0].message.content.strip()
+    coaching_sections = parse_coaching_sections(coaching_response)
+    coaching_io = BytesIO()
+    build_coaching_doc(latest, coaching_sections).save(coaching_io)
+    coaching_io.seek(0)
 
-        coaching_sections = parse_coaching_sections(coaching_response)
-        coaching_io = BytesIO()
-        build_coaching_doc(latest, coaching_sections).save(coaching_io)
-        coaching_io.seek(0)
+    leadership_io = BytesIO()
+    build_leadership_doc(latest, leadership_response).save(leadership_io)
+    leadership_io.seek(0)
 
-        leadership_io = BytesIO()
-        build_leadership_doc(latest, leadership_response).save(leadership_io)
-        leadership_io.seek(0)
+    try:
+        requests.post(SCRIPT_URL, data=latest)
+    except Exception as e:
+        st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
 
-        try:
-            requests.post(SCRIPT_URL, data=latest)
-        except Exception as e:
-            st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{employee}_coaching.docx")
-        with col2:
-            st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{employee}_leadership.docx")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button("\ud83d\udcc4 Download Coaching Doc", data=coaching_io, file_name=f"{latest['Employee Name']}_coaching.docx")
+    with col2:
+        st.download_button("\ud83d\udcc4 Download Leadership Doc", data=leadership_io, file_name=f"{latest['Employee Name']}_leadership.docx")
 
 with tab2:
     st.header("📊 Coaching Trend Dashboard")
