@@ -9,6 +9,12 @@ import requests
 import pandas as pd
 import altair as alt
 
+# === RESET HANDLER ===
+if "reset_form" in st.session_state:
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
 # === PAGE CONFIG ===
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
@@ -112,7 +118,7 @@ def build_leadership_doc(latest, leadership_text):
 
     return doc
 
-# === SESSION STATE ===
+# === SESSION STATE INIT ===
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
     st.session_state.generated = False
@@ -232,22 +238,26 @@ Description: {latest['Incident Description']}
     except Exception as e:
         st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{safe_name}_coaching.docx")
-    with col2:
-        st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{safe_name}_leadership.docx")
-
+    st.session_state.coaching_io = coaching_io
+    st.session_state.leadership_io = leadership_io
+    st.session_state.safe_name = safe_name
     st.session_state.generated = True
 
-# === Submit Another Form Button ===
+# === SHOW DOWNLOADS AND RESET ===
 if st.session_state.get("generated", False):
-    if st.button("🔄 Submit Another Form"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.experimental_rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button("📄 Download Coaching Doc", data=st.session_state.coaching_io,
+                           file_name=f"{st.session_state.safe_name}_coaching.docx")
+    with col2:
+        st.download_button("📄 Download Leadership Doc", data=st.session_state.leadership_io,
+                           file_name=f"{st.session_state.safe_name}_leadership.docx")
 
-# === TREND DASHBOARD ===
+    if st.button("🔄 Submit Another Form"):
+        st.session_state.reset_form = True
+        st.rerun()
+
+# === TREND DASHBOARD (unchanged) ===
 with tab2:
     st.header("📊 Coaching Trend Dashboard")
     try:
