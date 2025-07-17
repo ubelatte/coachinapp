@@ -7,6 +7,7 @@ from datetime import date
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
 
 # === PAGE CONFIG ===
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
@@ -170,6 +171,8 @@ with tab1:
 
 if st.session_state.submitted:
     latest = st.session_state.latest
+    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+
     coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
 Incident Summary:
@@ -203,7 +206,6 @@ Issue Type: {latest['Issue Type']}
 Description: {latest['Incident Description']}
 """
 
-    client = OpenAI(api_key=st.secrets["openai"]["api_key"])
     with st.spinner("Generating documents..."):
         coaching_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -213,7 +215,7 @@ Description: {latest['Incident Description']}
         if latest['Language Spoken'].lower() != "english":
             coaching_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}\n{coaching_response}"}],
+                messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}:\n{coaching_response}"}],
             ).choices[0].message.content.strip()
 
         leadership_response = client.chat.completions.create(
@@ -235,80 +237,9 @@ Description: {latest['Incident Description']}
     except Exception as e:
         st.warning(f"Submission logged locally. Google Sheet may not have updated.\n{e}")
 
+    safe_name = re.sub(r'[^\w\s-]', '', latest['Employee Name']).strip().replace(" ", "_") or "employee"
     col1, col2 = st.columns(2)
     with col1:
-        st.download_button("\ud83d\udcc4 Download Coaching Doc", data=coaching_io, file_name=f"{latest['Employee Name']}_coaching.docx")
+        st.download_button("\ud83d\udcc4 Download Coaching Doc", data=coaching_io, file_name=f"{safe_name}_coaching.docx")
     with col2:
-        st.download_button("\ud83d\udcc4 Download Leadership Doc", data=leadership_io, file_name=f"{latest['Employee Name']}_leadership.docx")
-
-with tab2:
-    st.header("📊 Coaching Trend Dashboard")
-    try:
-        sheet_url = st.secrets["sheet_config"].get("sheet_csv_url")
-        df = pd.read_csv(sheet_url)
-        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
-
-        min_date = df["Date of Incident"].min()
-        max_date = df["Date of Incident"].max()
-        start_date, end_date = st.date_input("Filter by Date Range", [min_date, max_date], key="date_range_filter")
-
-        if start_date and end_date:
-            df = df[(df["Date of Incident"] >= pd.to_datetime(start_date)) & (df["Date of Incident"] <= pd.to_datetime(end_date))]
-
-        filter_action = st.selectbox(
-            "Filter by Action Taken",
-            ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
-            key="trend_action_filter"
-        )
-        if filter_action != "All":
-            df = df[df["Action to be Taken"] == filter_action]
-
-        st.dataframe(df)
-
-        import altair as alt
-
-        st.subheader("Issue Type Count")
-        issue_counts = df["Issue Type"].value_counts().reset_index()
-        issue_counts.columns = ["Issue Type", "Count"]
-
-        bar_chart = alt.Chart(issue_counts).mark_bar().encode(
-            x=alt.X("Issue Type:N", sort="-y"),
-            y=alt.Y("Count:Q", scale=alt.Scale(domain=[0, issue_counts["Count"].max() + 1])),
-            tooltip=["Issue Type", "Count"]
-        ).properties(
-            width=600,
-            height=400
-        )
-
-        st.altair_chart(bar_chart, use_container_width=True)
-
-        st.subheader("Actions Over Time")
-        df["Date Only"] = df["Date of Incident"].dt.date
-        action_time = df.groupby(["Date Only", "Action to be Taken"]).size().unstack(fill_value=0)
-        st.line_chart(action_time)
-
-        st.subheader("🔍 AI-Powered Trend Summary")
-        with st.spinner("Analyzing trends with GPT..."):
-            csv_data = df.to_csv(index=False)
-
-            trend_prompt = f"""
-You are a workplace performance analyst. Analyze the following coaching data and provide:
-1. Trends in issue types, departments, and action levels
-2. Repeat or high-risk employees
-3. 3 key recommendations for supervisors
-
-CSV Data:
-{csv_data}
-"""
-            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
-            gpt_response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": trend_prompt}]
-            ).choices[0].message.content.strip()
-
-        st.markdown("#### GPT Coaching Trend Summary")
-        st.markdown(gpt_response)
-
-    except Exception as e:
-        st.warning("Could not load trend data.")
-        st.text(str(e))
+        st.download_button("\ud83d\udcc4 Download Leadership Doc", data=leadership_io, file_name=f"{safe_name}_leadership.docx")
