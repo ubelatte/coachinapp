@@ -1,6 +1,4 @@
-# FULL CORRECTED STREAMLIT SCRIPT (with "Submit Another Form" fix only)
-# Assumes previous content structure (Tabs: Coaching Form + Trend Dashboard)
-
+# === IMPORTS ===
 import streamlit as st
 from openai import OpenAI
 from docx import Document
@@ -236,22 +234,18 @@ Description: {latest['Incident Description']}
 
     col1, col2 = st.columns(2)
     with col1:
-        st.download_button("\ud83d\udcc4 Download Coaching Doc", data=coaching_io, file_name=f"{safe_name}_coaching.docx")
+        st.download_button("📄 Download Coaching Doc", data=coaching_io, file_name=f"{safe_name}_coaching.docx")
     with col2:
-        st.download_button("\ud83d\udcc4 Download Leadership Doc", data=leadership_io, file_name=f"{safe_name}_leadership.docx")
+        st.download_button("📄 Download Leadership Doc", data=leadership_io, file_name=f"{safe_name}_leadership.docx")
 
     st.session_state.generated = True
 
 # === Submit Another Form Button ===
 if st.session_state.get("generated", False):
-    if st.button("\ud83d\udd04 Submit Another Form"):
+    if st.button("🔄 Submit Another Form"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.experimental_rerun()
-
-# === Trend Dashboard tab remains unchanged ===
-# Paste your original dashboard logic here
-
 
 # === TREND DASHBOARD ===
 with tab2:
