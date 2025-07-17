@@ -254,8 +254,11 @@ if st.session_state.get("generated", False):
                            file_name=f"{st.session_state.safe_name}_leadership.docx")
 
     if st.button("🔄 Submit Another Form"):
-        st.session_state.reset_form = True
-        st.rerun()
+        st.session_state.submitted = False
+        st.session_state.generated = False
+        st.session_state.latest = {}
+
+
 
 # === TREND DASHBOARD (unchanged) ===
 with tab2:
