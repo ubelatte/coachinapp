@@ -1,3 +1,4 @@
+# === FULL FIXED SCRIPT ===
 import streamlit as st
 from openai import OpenAI
 from docx import Document
@@ -6,7 +7,6 @@ from io import BytesIO
 from datetime import date
 import requests
 import pandas as pd
-import re
 import matplotlib.pyplot as plt
 import altair as alt
 
@@ -22,11 +22,7 @@ if st.text_input("Enter password:", type="password") != PASSWORD:
 # === GOOGLE SCRIPT URL ===
 SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzphJdM4C4-fQ8OS1Q_2eW7sXsC12MKPthejioPoDg_gnUlImkzOcKJM5_ndk9KzQewNg/exec"
 
-# === UTIL ===
-def sanitize_filename(name):
-    return re.sub(r'[^\w\s-]', '', name).strip().replace(' ', '_') or "employee"
-
-# === DOCX HELPERS ===
+# === HELPERS ===
 def add_bold_para(doc, label, value):
     para = doc.add_paragraph()
     run = para.add_run(label)
@@ -60,6 +56,7 @@ def build_coaching_doc(latest, coaching_dict):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
     doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
+
     doc.add_heading("Section 1 – Supervisor Entry", level=1)
     for field in [
         "Date of Incident", "Department", "Employee Name", "Supervisor Name",
@@ -88,53 +85,59 @@ def build_leadership_doc(latest, leadership_text):
     doc.add_heading("Leadership Reflection", 0)
     for field in ["Supervisor Name", "Employee Name", "Department", "Issue Type", "Date of Incident"]:
         add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
-    doc.add_paragraph()
+
     add_section_header(doc, "AI-Generated Leadership Guidance:")
 
-    sections = ["Private Reflection", "Coaching Tips", "Tone Guidance", "Follow-Up Recommendation", "Supervisor Accountability Tip"]
+    sections = [
+        "Private Reflection", "Coaching Tips", "Tone Guidance",
+        "Follow-Up Recommendation", "Supervisor Accountability Tip"]
     current_title = None
     buffer = []
+
     for line in leadership_text.splitlines() + [""]:
         stripped = line.strip()
         if stripped.endswith(":") and stripped[:-1] in sections:
             if current_title and buffer:
-                doc.add_paragraph()
-                run = doc.add_paragraph().add_run(current_title + ":")
-                run.bold = True
+                doc.add_paragraph().add_run(current_title + ":").bold = True
                 for para in buffer:
-                    doc.add_paragraph(para.strip())
+                    doc.add_paragraph(para)
                 buffer = []
             current_title = stripped[:-1]
         elif current_title:
             buffer.append(stripped)
+
     if current_title and buffer:
-        doc.add_paragraph()
-        run = doc.add_paragraph().add_run(current_title + ":")
-        run.bold = True
+        doc.add_paragraph().add_run(current_title + ":").bold = True
         for para in buffer:
-            doc.add_paragraph(para.strip())
+            doc.add_paragraph(para)
 
     return doc
 
-# === FORM STATE ===
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
+    st.session_state.generated = False
 
 # === TABS ===
 tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
 
 with tab1:
     with st.form("coaching_form"):
-        supervisor = st.selectbox("Supervisor Name", ["Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John", "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
+        supervisor = st.selectbox("Supervisor Name", [
+            "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
+            "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
         employee = st.text_input("Employee Name")
         department = st.selectbox("Department", [
-            "Rough In", "Paint Line (NP)", "Commercial Fabrication", "Baseboard Accessories",
-            "Maintenance", "Residential Fabrication", "Residential Assembly/Packing",
-            "Warehouse (55WIPR)", "Convector & Twin Flo", "Shipping/Receiving/Drivers",
+            "Rough In", "Paint Line (NP)", "Commercial Fabrication",
+            "Baseboard Accessories", "Maintenance", "Residential Fabrication",
+            "Residential Assembly/Packing", "Warehouse (55WIPR)",
+            "Convector & Twin Flo", "Shipping/Receiving/Drivers",
             "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"])
         incident_date = st.date_input("Date of Incident", value=date.today())
-        issue_type = st.selectbox("Issue Type", ["Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"])
-        action_taken = st.selectbox("Action to be Taken", ["Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
+        issue_type = st.selectbox("Issue Type", [
+            "Attendance", "Safety", "Behavior", "Performance",
+            "Policy Violation", "Recognition"])
+        action_taken = st.selectbox("Action to be Taken", [
+            "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
         description = st.text_area("Incident Description")
         estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
         language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
@@ -161,7 +164,7 @@ with tab1:
 
 if st.session_state.submitted:
     latest = st.session_state.latest
-    safe_name = sanitize_filename(latest["Employee Name"])
+    safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
@@ -287,6 +290,7 @@ You are a workplace performance analyst. Analyze the following coaching data and
 CSV Data:
 {csv_data}
 """
+            client = OpenAI(api_key=st.secrets["openai"]["api_key"])
             gpt_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": trend_prompt}]
