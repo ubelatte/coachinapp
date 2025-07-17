@@ -253,17 +253,6 @@ if st.session_state.get("generated", False):
         st.download_button("📄 Download Leadership Doc", data=st.session_state.leadership_io,
                            file_name=f"{st.session_state.safe_name}_leadership.docx")
 
-    if st.button("🔄 Submit Another Form"):
-        keys_to_clear = [
-            "submitted", "generated", "latest",
-            "coaching_io", "leadership_io", "safe_name"
-        ]
-        for key in keys_to_clear:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
-
-
 
 # === TREND DASHBOARD (unchanged) ===
 with tab2:
