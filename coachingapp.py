@@ -45,82 +45,118 @@ except Exception as e:
 
 client_openai = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
+# === AI FUNCTIONS ===
+def analyze_text(text):
+    prompt = f"Generate a coaching summary from this incident: {text}\nInclude expectations going forward."
+    try:
+        completion = client_openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        return f"(AI Error: {e})"
+
 # === DOCX GENERATION ===
-def generate_docx(supervisor, employee, department, date, description, expectations):
+def create_doc(employee, supervisor, department, date, issue_type, action, description, cost, language, previous):
+    summary = analyze_text(description)
     doc = Document()
-    doc.add_heading("Coaching Report", 0).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    doc.add_heading("Coaching Report", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     fields = [
-        ("Supervisor Name:", supervisor),
         ("Employee Name:", employee),
+        ("Supervisor Name:", supervisor),
         ("Department:", department),
         ("Date of Incident:", date),
-        ("Incident Description:", description),
-        ("Expectations Going Forward:", expectations)
+        ("Issue Type:", issue_type),
+        ("Action to be Taken:", action),
+        ("Estimated/Annual Cost:", cost),
+        ("Language Spoken:", language),
+        ("Previous Coaching/Warnings:", previous),
     ]
     for label, value in fields:
-        para = doc.add_paragraph()
-        para.add_run(label + " ").bold = True
-        para.add_run(value)
+        p = doc.add_paragraph()
+        r1 = p.add_run(label + " ")
+        r1.bold = True
+        p.add_run(value)
 
-    doc.add_paragraph("\nSignatures:")
-    doc.add_paragraph("Employee Signature: ______________________    Date: __________")
-    doc.add_paragraph("Supervisor Signature: _____________________    Date: __________")
+    doc.add_paragraph("\nIncident Description", style='Heading 2')
+    doc.add_paragraph(description)
+
+    doc.add_paragraph("\nAI-Generated Coaching Summary", style='Heading 2')
+    doc.add_paragraph(summary)
+
+    doc.add_paragraph("\nSign-Offs", style='Heading 2')
+    doc.add_paragraph("Employee Signature: ________________________________    Date: ____________")
+    doc.add_paragraph("Supervisor Signature: ________________________________  Date: ____________")
 
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
-    return buffer
+    return buffer, summary
 
-# === FORM ===
-if "form_submitted" not in st.session_state:
-    st.session_state.form_submitted = False
+# === UI FORM ===
+if 'submitted' not in st.session_state:
+    st.session_state.submitted = False
 
 with st.form("coaching_form"):
-    email = st.text_input("Supervisor Email")
+    email = st.text_input("Email Address")
     supervisor = st.text_input("Supervisor Name")
     employee = st.text_input("Employee Name")
-    department = st.selectbox("Department", [
-        "Rough In", "Paint Line (NP)", "Commercial Fabrication",
-        "Baseboard Accessories", "Maintenance", "Residential Fabrication",
-        "Residential Assembly/Packing", "Warehouse (55WIPR)",
-        "Convector & Twin Flo", "Shipping/Receiving/Drivers",
-        "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"
-    ])
+    department = st.text_input("Department")
     date = st.date_input("Date of Incident", value=datetime.date.today())
-    issue = st.text_input("Issue Type")
-    action = st.text_input("Action to be Taken")
+    issue_type = st.selectbox("Issue Type", ["Performance", "Behavior", "Attendance", "Other"])
+    action = st.selectbox("Action to be Taken", ["Coaching", "Verbal Warning", "Written Warning", "Final Warning"])
     description = st.text_area("Incident Description")
     cost = st.text_input("Estimated/Annual Cost")
     language = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
     previous = st.text_area("Previous Coaching/Warnings")
-
-    expectations = st.text_area("Expectations Going Forward")
-
     submitted = st.form_submit_button("Generate Coaching Report")
 
-    if submitted:
-        if not all([supervisor, employee, department, description, expectations]):
-            st.warning("Please complete all required fields.")
-        else:
-            timestamp = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-            row = [
-                timestamp, email, supervisor, employee, department,
-                str(date), issue, action, description, cost, language, previous
-            ] + [""] * 12  # Padding to align with full sheet structure if needed
-            sheet.append_row(row, value_input_option="USER_ENTERED")
-            st.success("✅ Logged to sheet")
+    if submitted and all([email, supervisor, employee, department, description]):
+        st.session_state.submitted = True
+        st.session_state.data = {
+            "email": email,
+            "supervisor": supervisor,
+            "employee": employee,
+            "department": department,
+            "date": str(date),
+            "issue_type": issue_type,
+            "action": action,
+            "description": description,
+            "cost": cost,
+            "language": language,
+            "previous": previous
+        }
 
-            st.session_state.report_docx = generate_docx(
-                supervisor, employee, department, str(date), description, expectations
-            )
-            st.session_state.form_submitted = True
+# === LOGGING + DOWNLOAD ===
+if st.session_state.submitted:
+    data = st.session_state.data
+    docx_file, ai_summary = create_doc(
+        data["employee"], data["supervisor"], data["department"], data["date"],
+        data["issue_type"], data["action"], data["description"],
+        data["cost"], data["language"], data["previous"]
+    )
 
-# === REPORT DOWNLOAD ===
-if st.session_state.get("form_submitted") and "report_docx" in st.session_state:
+    timestamp = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    row = [
+        timestamp, data["email"], data["supervisor"], data["employee"],
+        data["department"], data["date"], data["issue_type"],
+        data["action"], data["description"], data["cost"],
+        data["language"], data["previous"]
+    ]
+    try:
+        sheet.append_row(row, value_input_option="USER_ENTERED")
+        st.success("✅ Entry logged to Google Sheet")
+    except Exception as e:
+        st.error(f"❌ Failed to log entry: {e}")
+
     st.download_button(
         label="📄 Download Coaching Report",
-        data=st.session_state.report_docx,
-        file_name=f"{st.session_state.get('employee', 'coaching')}_report.docx",
+        data=docx_file,
+        file_name=f"{data['employee'].replace(' ', '_')}_Coaching_Report.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
+    st.session_state.submitted = False
