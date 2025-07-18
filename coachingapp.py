@@ -166,7 +166,7 @@ with tab1:
             "Department": department,
             "Date of Incident": incident_date.strftime("%Y-%m-%d"),
             "Issue Type": issue_type,
-            "Action to be Taken": action_taken,
+            "Action Taken": action_taken,
             "Incident Description": description,
             "Estimated/Annual Cost": estimated_cost,
             "Language Spoken": language,
@@ -190,7 +190,7 @@ Employee: {latest['Employee Name']}
 Department: {latest['Department']}
 Date of Incident: {latest['Date of Incident']}
 Issue Type: {latest['Issue Type']}
-Action Taken: {latest['Action to be Taken']}
+Action Taken: {latest['Action Taken']}
 Description: {latest['Incident Description']}
 """
 
