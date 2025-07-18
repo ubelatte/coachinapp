@@ -146,7 +146,7 @@ with tab1:
         issue_type = st.selectbox("Issue Type", [
             "Attendance", "Safety", "Behavior", "Performance",
             "Policy Violation", "Recognition"])
-        action_taken = st.selectbox("Action to be Taken", [
+        action_taken = st.selectbox("Action Taken", [
             "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
         description = st.text_area("Incident Description")
         estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
@@ -297,7 +297,7 @@ with tab2:
 
         st.subheader("Actions Over Time")
         df["Date Only"] = df["Date of Incident"].dt.date
-        action_time = df.groupby(["Date Only", "Action to be Taken"]).size().unstack(fill_value=0)
+        action_time = df.groupby(["Date Only", "Action Taken"]).size().unstack(fill_value=0)
         st.line_chart(action_time)
 
         st.subheader("🔍 AI-Powered Trend Summary")
