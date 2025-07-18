@@ -31,7 +31,7 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 service_account_info = st.secrets["gcp_service_account"]
 creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
 gs_client = gspread.authorize(creds)
-sheet = gs_client.open("Coaching Tracker").sheet1  # <-- rename to match your sheet
+sheet = gs_client.open("Coaching Assessment Form").sheet1  # <-- rename to match your sheet
 
 # === OPENAI ===
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
