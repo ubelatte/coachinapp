@@ -22,7 +22,7 @@ if "reset_form" in st.session_state:
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
 # === PASSWORD ===
-PASSWORD = "WFHQmestek413"
+PASSWORD = "mestek"
 if st.text_input("Enter password:", type="password") != PASSWORD:
     st.warning("Please enter the correct password.")
     st.stop()
