@@ -250,7 +250,7 @@ The incident is summarized below:
 Rewrite the supervisor's description into a clean, formal, detailed, and objective summary. Expand context, mention cost if provided as:
 "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
 Do not copy directly.
-"""
+    
 Expectations Going Forward:
 Clearly outline what the employee is expected to improve or do differently going forward.
 
@@ -259,6 +259,7 @@ List 2-4 short keywords like attendance, policy violation, teamwork, etc.
 
 Severity:
 Choose one: Critical, High, Moderate, Minor - based on tone and seriousness. If unclear, say "No severity level specified."
+
 """
 
     leadership_prompt = f"""
