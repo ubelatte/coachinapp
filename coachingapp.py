@@ -176,7 +176,7 @@ with tab1:
         action_taken = st.selectbox("Action to be Taken", [
             "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
         description = st.text_area("Incident Description")
-        points = st.text_area("Current Discipline Points")
+        points = st.text_input("Current Discipline Points")
         estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
         language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
         language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
