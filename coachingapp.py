@@ -236,14 +236,18 @@ if st.session_state.submitted and not st.session_state.generated:
     latest = st.session_state.latest
     safe_name = latest["Employee Name"].replace(" ", "_")
 
-    coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format:
+coaching_prompt = f"""
+You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format.
 
 Incident Summary:
-Start with:
-"On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:"
+Begin with the following sentence, followed by a line break:
+"On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}."
 
-[Insert a clear new paragraph here.] Rewrite the supervisor’s description into a clean, formal, detailed, and objective summary. Explain the background, policy impact, and any relevant point history. Expand context and mention cost only if applicable. DO NOT copy directly.
+On a new line, write:
+"The incident is summarized below:"
+
+Then, leave a blank line and begin a new paragraph starting with a detailed, formal, and objective rewrite of the supervisor’s description. Include relevant context, history, policy impact, and tone. If any cost is provided in the data, include a sentence explaining the financial or operational impact, using this format:
+"The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
 
 Supervisor Description:
 {latest['Incident Description']}
