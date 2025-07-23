@@ -228,9 +228,12 @@ Tags:
 Provide 2–4 concise keywords that reflect the nature of the incident (e.g., attendance, performance, safety, policy violation).
 
 Severity:
-Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). If no severity is implied, respond with: 'No severity level specified.'
+Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). 
+If no severity is implied, respond with: "No severity level specified."
 
-Data:
+=== END OF COACHING REPORT ===
+    
+The following data is for reference only. Do not include it in any section above:
 Supervisor: {latest['Supervisor Name']}
 Employee: {latest['Employee Name']}
 Department: {latest['Department']}
@@ -239,7 +242,9 @@ Issue Type: {latest['Issue Type']}
 Action Taken: {latest['Action to be Taken']}
 Description: {latest['Incident Description']}
 Current Points: {latest['Current Discipline Points']}
-"""
+
+
+
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
