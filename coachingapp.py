@@ -240,7 +240,7 @@ if st.session_state.submitted and not st.session_state.generated:
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure and tone. Follow it exactly.
 
 Tone & Focus Requirements:
-- Be factual and objective.
+- Be factual and objective but not cold.
 - Reference Mestek policies or safety procedures if violated.
 - Clearly define expected improvements.
 - Use the document to educate and redirect, not punish.
