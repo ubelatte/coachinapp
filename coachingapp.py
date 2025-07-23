@@ -70,6 +70,29 @@ def parse_coaching_sections(raw_text):
         sections[current_section] = " ".join(buffer).strip()
     return sections
 
+def add_markdown_bold_paragraph(doc, text):
+    """
+    Parses text with **markdown bold** syntax and adds it to the Word doc with actual bold styling.
+    """
+    para = doc.add_paragraph()
+    bold = False
+    buffer = ''
+    i = 0
+    while i < len(text):
+        if text[i:i+2] == '**':
+            if buffer:
+                run = para.add_run(buffer)
+                run.bold = bold
+                buffer = ''
+            bold = not bold
+            i += 2
+        else:
+            buffer += text[i]
+            i += 1
+    if buffer:
+        run = para.add_run(buffer)
+        run.bold = bold
+
 def build_coaching_doc(latest, coaching_dict):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
@@ -84,11 +107,10 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_page_break()
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
-
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
-            add_markdown_bold_paragraph(doc, coaching_dict[section])
+            add_markdown_bold_paragraph(doc, coaching_dict[section])  # ✅ real bold from markdown
 
     doc.add_paragraph("\nAcknowledgment of Receipt:")
     doc.add_paragraph(
@@ -97,8 +119,7 @@ def build_coaching_doc(latest, coaching_dict):
         "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-    
-    return doc  # ✅ This line must be inside the function (indented with the rest above!)
+    return doc
 
 
 
