@@ -230,7 +230,8 @@ Provide 2–4 concise keywords that reflect the nature of the incident (e.g., at
 Severity:
 Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). 
 
-#=== END OF COACHING REPORT ===
+[END OF REPORT CONTENT. DO NOT INCLUDE ANYTHING BELOW IN THE OUTPUT.]
+
     
 The following data is for reference only. Do not include it in any section above:
 Supervisor: {latest['Supervisor Name']}
