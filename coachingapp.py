@@ -229,9 +229,8 @@ Provide 2–4 concise keywords that reflect the nature of the incident (e.g., at
 
 Severity:
 Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). 
-If no severity is implied, respond with: "No severity level specified."
 
-=== END OF COACHING REPORT ===
+#=== END OF COACHING REPORT ===
     
 The following data is for reference only. Do not include it in any section above:
 Supervisor: {latest['Supervisor Name']}
