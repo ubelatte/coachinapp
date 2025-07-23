@@ -240,17 +240,18 @@ if st.session_state.submitted and not st.session_state.generated:
 You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format.
 
 Incident Summary:
-Begin with the following sentence, followed by a line break:
-"On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}."
 
-On a new line, write:
-"The incident is summarized below:"
+On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
-Then, leave a blank line and begin a new paragraph starting with a detailed, formal, and objective rewrite of the supervisor’s description. Include relevant context, history, policy impact, and tone. If any cost is provided in the data, include a sentence explaining the financial or operational impact, using this format:
-"The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
+The incident is summarized below:
 
-Supervisor Description:
 {latest['Incident Description']}
+
+Rewrite the supervisor's description into a clean, formal, detailed, and objective summary. Expand context, mention cost if provided as:
+"The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
+Do not copy directly.
+"""
+
 
 Expectations Going Forward:
 Clearly outline what the employee is expected to improve or do differently going forward.
