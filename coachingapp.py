@@ -242,18 +242,12 @@ You are a workplace coaching assistant. Generate a Workplace Coaching Report usi
 Incident Summary:
 
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
-
-The incident is summarized below:
-
 - Rewrite the supervisor's description in a formal, detailed, and objective tone.
 - Include relevant background information (e.g., point history, leaves, previous actions).
 - Expand on the timeline and explain the significance of the issue and the response.
 - Mention any impact to productivity or policy.
 - If a cost is provided, include: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
 - Do not directly copy the supervisor’s description.
-
-Supervisor's Description:
-"{latest['Incident Description']}"
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific.
