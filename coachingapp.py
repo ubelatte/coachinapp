@@ -210,16 +210,19 @@ if st.session_state.submitted and not st.session_state.generated:
     You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following format:
 
     Incident Summary:
-    On {latest['Date of Incident']}, in {latest['Department']}, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. Expand professionally and constructively based on the supervisor’s description. Include background context if helpful and maintain the formal tone used in previous coaching documents.
+    On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:
+
+    > Rewrite the following supervisor description into a professional, detailed, and objective incident summary. Maintain a formal tone and clarify any confusing details for HR documentation:
+    {latest['Incident Description']}
 
     Expectations Going Forward:
-    Provide a concise, directive explanation of what is expected from the employee going forward.
+    Provide a clear and concise statement of expectations for the employee moving forward. Use a professional and direct tone.
 
     Tags:
-    Include 2–4 short keywords (e.g., attendance, performance, teamwork).
+    Provide 2–4 concise keywords that reflect the nature of the incident (e.g., attendance, performance, safety, policy violation).
 
     Severity:
-    DO NOT analyze or generate severity level. Simply include what was provided in the Incident Description if a severity term is mentioned. Otherwise, leave this section blank.
+    Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). If no severity is implied, respond with: 'No severity level specified.'
 
     Data:
     Supervisor: {latest['Supervisor Name']}
