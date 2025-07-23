@@ -241,10 +241,10 @@ You are a workplace coaching assistant. Generate a Workplace Coaching Report in 
 
 Incident Summary:
 Start with:
-"On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:"
+On [date], at the [facility] location, [employee name] was involved in a situation that required supervisory intervention...
 
-Then, below that, start a new paragraph beginning with:
-">" and rewrite the supervisor’s description into a clean, formal, detailed, and objective summary. Explain the background, policy impact, and any relevant point history. Expand context and mention cost only if applicable. DO NOT copy directly.
+    > Elaborated version here (indented)
+
 
 Supervisor Description:
 {latest['Incident Description']}
