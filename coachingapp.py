@@ -260,15 +260,13 @@ Policy References:
 
 Structure:
 Incident Summary:
-On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
-- Rewrite the supervisor's description in a formal, detailed, and objective tone.
-- Include relevant background information (e.g., point history, leaves, previous actions).
-- Expand on the timeline and explain the significance of the issue and the response.
-- Mention any impact to productivity or policy. 
-- Include point progression or regression.
-- If a cost is provided, include: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
-- Conclude by noting: "Continued issues may result in progressive discipline, per Mestek guidelines."
-- Do not directly copy the supervisor’s description.
+On July 23, 2025, at the Residential Assembly/Packing department, employee Zayra Ramos was involved in an attendance-related issue that required supervisory intervention. The corrective action taken was a Written Warning, which was formally issued on July 24, 2025.
+
+Zayra had accumulated 3.5 disciplinary points prior to this incident. On July 23, she was absent from work. Because she had no remaining sick time available to cover the absence, it was considered unexcused and resulted in the addition of 1 disciplinary point. This brought her total to 4.5 points, which—per the Factory Policies Packet 2025: Attendance and Points System—triggers a written warning.
+
+While no specific financial cost was reported, unexcused absences can negatively affect team scheduling and overall production flow.
+
+Continued issues may result in progressive discipline, per Mestek guidelines.
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific.
@@ -279,8 +277,6 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 Action Taken:
 - Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
 """
-
-
 
 
     leadership_prompt = f"""
