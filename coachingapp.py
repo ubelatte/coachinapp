@@ -106,7 +106,7 @@ def build_coaching_doc(latest, coaching_dict):
         add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
 
     doc.add_page_break()
-    doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
+    doc.add_heading("Section 2 – Coaching Report", level=1)
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
@@ -256,8 +256,8 @@ Clearly explain what the employee is expected to change or improve. Be firm, sup
 Tags:
 List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
-Severity:
-Assign one: Critical, High, Moderate, Minor. If unclear, write "No severity level specified."
+Action Taken:
+- Simply Restate which action was taken. (e.g., coahing, verbal warning, written warning, suspension, termination, etc.) 
 """
 
 
