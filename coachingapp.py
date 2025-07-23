@@ -70,7 +70,6 @@ def parse_coaching_sections(raw_text):
         sections[current_section] = " ".join(buffer).strip()
     return sections
 
-
 def build_coaching_doc(latest, coaching_dict):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
@@ -85,10 +84,11 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_page_break()
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
+
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
-            add_markdown_bold_paragraph(doc, coaching_dict[section])  # ✅ real bold from markdown
+            add_markdown_bold_paragraph(doc, coaching_dict[section])
 
     doc.add_paragraph("\nAcknowledgment of Receipt:")
     doc.add_paragraph(
@@ -97,7 +97,8 @@ def build_coaching_doc(latest, coaching_dict):
         "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-    return doc
+    
+    return doc  # ✅ This line must be inside the function (indented with the rest above!)
 
 
 
