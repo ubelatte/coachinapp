@@ -218,7 +218,7 @@ You are a workplace coaching assistant. Generate a Workplace Coaching Report in 
 
 Incident Summary:
 Start with:
-"On {latest['Date of Incident']}, in the {latest['Department']} department, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. The corrective action taken was {latest['Action to be Taken']}, which was delivered on {date.today().strftime('%B %d, %Y')}."
+"On **{latest['Date of Incident']}**, in the **{latest['Department']}** department, **{latest['Employee Name']}** was involved in an issue related to **{latest['Issue Type']}**. The corrective action taken was **{latest['Action to be Taken']}**, which was delivered on **{date.today().strftime('%B %d, %Y')}**."
 
 Then, write a detailed summary of the incident based on the supervisor’s description below. Do **not** copy their words directly. Rewrite for clarity and professionalism, expand the context, explain the disciplinary points and what triggered the warning, and mention productivity or policy relevance if applicable.
 
