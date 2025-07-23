@@ -3,6 +3,8 @@ import streamlit as st
 from openai import OpenAI
 from docx import Document
 from docx.shared import Pt
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from io import BytesIO
 from datetime import date
 import requests
@@ -11,6 +13,7 @@ import altair as alt
 import gspread
 from google.oauth2.service_account import Credentials
 import datetime
+import re
 
 # === RESET HANDLER ===
 if "reset_form" in st.session_state:
@@ -32,7 +35,7 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 service_account_info = st.secrets["gcp_service_account"]
 creds = Credentials.from_service_account_info(service_account_info, scopes=scope)
 gs_client = gspread.authorize(creds)
-sheet = gs_client.open("Coaching Assessment Form").sheet1  # UPDATE to your actual sheet name
+sheet = gs_client.open("Coaching Assessment Form").sheet1
 
 # === OPENAI SETUP ===
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
@@ -76,7 +79,7 @@ def build_coaching_doc(latest, coaching_dict):
     for field in [
         "Date of Incident", "Department", "Employee Name", "Supervisor Name",
         "Action to be Taken", "Issue Type", "Incident Description", "Estimated/Annual Cost",
-        "Language Spoken", "Previous Coaching/Warnings"]:
+        "Language Spoken", "Previous Coaching/Warnings", "Current Discipline Points"]:
         add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
 
     doc.add_page_break()
@@ -94,6 +97,8 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
+
+
 
 def build_leadership_doc(latest, leadership_text):
     doc = Document()
@@ -171,6 +176,7 @@ with tab1:
         action_taken = st.selectbox("Action to be Taken", [
             "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
         description = st.text_area("Incident Description")
+        points = st.text_area("Current Discipline Points")
         estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
         language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
         language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
@@ -189,6 +195,7 @@ with tab1:
             "Issue Type": issue_type,
             "Action to be Taken": action_taken,
             "Incident Description": description,
+            "Current Discipline Points": points,
             "Estimated/Annual Cost": estimated_cost,
             "Language Spoken": language,
             "Previous Coaching/Warnings": previous
@@ -221,6 +228,7 @@ if st.session_state.submitted and not st.session_state.generated:
     Issue Type: {latest['Issue Type']}
     Action Taken: {latest['Action to be Taken']}
     Description: {latest['Incident Description']}
+    Current Points: {latest['Current Discipline Points']}
     """
 
 
