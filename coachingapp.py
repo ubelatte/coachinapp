@@ -277,7 +277,7 @@ Tags:
 List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
-- Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
+Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
 """
 
 
