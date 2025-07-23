@@ -237,31 +237,31 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure:
+You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure. Follow it exactly.
 
 Incident Summary:
 
-On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in an incident related to {latest['Issue Type'].lower()}, which necessitated supervisory intervention.
+On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
 The incident is summarized below:
 
-[Insert a detailed, objective, professional summary of the incident here, rewritten from the supervisor description.]
+[Begin a new paragraph. Rewrite the supervisor’s description in a professional, detailed, and objective tone. Include background (like point history), the sequence of events, and policy relevance. Avoid repeating the same wording. Expand where needed.]
 
-If a cost is provided, include this sentence at the end of the paragraph:
-"The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
+If an estimated or annual cost is provided, add a final sentence: The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.
 
-Supervisor Description:
+Supervisor's Description:
 {latest['Incident Description']}
 
 Expectations Going Forward:
-Clearly outline what the employee is expected to improve or do differently going forward.
+Clearly explain what the employee must do differently, based on the issue.
 
 Tags:
-List 2-4 short keywords like attendance, policy violation, teamwork, etc.
+List 2–4 short keywords summarizing the issue.
 
 Severity:
-Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say "No severity level specified."
+Select one severity level from: Critical, High, Moderate, Minor.
 """
+
 
 
     leadership_prompt = f"""
