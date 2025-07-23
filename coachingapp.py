@@ -1,3 +1,4 @@
+
 # === IMPORTS ===
 import streamlit as st
 from openai import OpenAI
@@ -97,7 +98,6 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
-
 
 
 def build_leadership_doc(latest, leadership_text):
