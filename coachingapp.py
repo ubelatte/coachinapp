@@ -1,4 +1,3 @@
-
 # === IMPORTS ===
 import streamlit as st
 from openai import OpenAI
@@ -100,6 +99,7 @@ def build_coaching_doc(latest, coaching_dict):
     return doc
 
 
+
 def build_leadership_doc(latest, leadership_text):
     doc = Document()
     doc.add_heading("Leadership Reflection", 0)
@@ -107,10 +107,11 @@ def build_leadership_doc(latest, leadership_text):
         add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
 
     add_section_header(doc, "AI-Generated Leadership Guidance:")
-    
+
     sections = [
         "Private Reflection", "Coaching Tips", "Tone Guidance",
-        "Follow-Up Recommendation", "Supervisor Accountability Tip"]
+        "Follow-Up Recommendation", "Supervisor Accountability Tip"
+    ]
     current_title = None
     buffer = []
 
@@ -133,6 +134,7 @@ def build_leadership_doc(latest, leadership_text):
 
     return doc
 
+
 def log_submission_to_sheet(data_dict):
     timestamp = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     row = [
@@ -151,6 +153,7 @@ def log_submission_to_sheet(data_dict):
     ]
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
+
 # === SESSION STATE INIT ===
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
@@ -158,6 +161,9 @@ if "submitted" not in st.session_state:
 
 # === TABS ===
 tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
+
+
+
 
 with tab1:
     with st.form("coaching_form"):
@@ -207,34 +213,33 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-    You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following format:
+You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following format:
 
-    Incident Summary:
-    On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:
+Incident Summary:
+On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:
 
-    > Rewrite the following supervisor description into a professional, detailed, and objective incident summary. Maintain a formal tone and clarify any confusing details for HR documentation:
-    {latest['Incident Description']}
+> Rewrite the following supervisor description into a professional, detailed, and objective incident summary. Maintain a formal tone and clarify any confusing details for HR documentation:
+{latest['Incident Description']}
 
-    Expectations Going Forward:
-    Provide a clear and concise statement of expectations for the employee moving forward. Use a professional and direct tone.
+Expectations Going Forward:
+Provide a clear and concise statement of expectations for the employee moving forward. Use a professional and direct tone.
 
-    Tags:
-    Provide 2–4 concise keywords that reflect the nature of the incident (e.g., attendance, performance, safety, policy violation).
+Tags:
+Provide 2–4 concise keywords that reflect the nature of the incident (e.g., attendance, performance, safety, policy violation).
 
-    Severity:
-    Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). If no severity is implied, respond with: 'No severity level specified.'
+Severity:
+Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). If no severity is implied, respond with: 'No severity level specified.'
 
-    Data:
-    Supervisor: {latest['Supervisor Name']}
-    Employee: {latest['Employee Name']}
-    Department: {latest['Department']}
-    Date of Incident: {latest['Date of Incident']}
-    Issue Type: {latest['Issue Type']}
-    Action Taken: {latest['Action to be Taken']}
-    Description: {latest['Incident Description']}
-    Current Points: {latest['Current Discipline Points']}
-    """
-
+Data:
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Date of Incident: {latest['Date of Incident']}
+Issue Type: {latest['Issue Type']}
+Action Taken: {latest['Action to be Taken']}
+Description: {latest['Incident Description']}
+Current Points: {latest['Current Discipline Points']}
+"""
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
@@ -297,6 +302,7 @@ if st.session_state.get("generated", False):
     with col2:
         st.download_button("📄 Download Leadership Doc", data=st.session_state.leadership_io,
                            file_name=f"{st.session_state.safe_name}_leadership.docx")
+
 
 # === TREND DASHBOARD ===
 with tab2:
