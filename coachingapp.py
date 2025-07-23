@@ -237,20 +237,26 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format.
+You are a workplace coaching assistant. Generate a formal Workplace Coaching Report.
 
 Incident Summary:
+Begin with this sentence on its own line:
+"On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in an incident related to {latest['Issue Type'].lower()}, which necessitated supervisory intervention."
 
-On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
+On a new line, write:
+"The incident is summarized below:"
 
-The incident is summarized below:
+Then leave a blank line.
 
+Now write a detailed, objective, and professional summary based on the supervisor's description below. Be sure to include:
+- Timeline of events and point history
+- Any mention of leave or return dates
+- Mention if a Verbal Warning was issued
+- A final sentence stating: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}." (only if cost is not blank)
+
+Supervisor Description:
 {latest['Incident Description']}
 
-Rewrite the supervisor's description into a clean, formal, detailed, and objective summary. Expand context, mention cost if provided as:
-"The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
-Do not copy directly.
-    
 Expectations Going Forward:
 Clearly outline what the employee is expected to improve or do differently going forward.
 
@@ -258,9 +264,9 @@ Tags:
 List 2-4 short keywords like attendance, policy violation, teamwork, etc.
 
 Severity:
-Choose one: Critical, High, Moderate, Minor - based on tone and seriousness. If unclear, say "No severity level specified."
-
+Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say "No severity level specified."
 """
+
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
