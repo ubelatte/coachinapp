@@ -260,7 +260,7 @@ Tags:
 List 2-4 short keywords like attendance, policy violation, teamwork, etc.
 
 Severity:
-Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say “No severity level specified.”
+Choose one: Critical, High, Moderate, Minor - based on tone and seriousness. If unclear, say “No severity level specified.”
 """
 
     leadership_prompt = f"""
