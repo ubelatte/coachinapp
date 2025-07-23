@@ -146,12 +146,13 @@ def log_submission_to_sheet(data_dict):
         data_dict.get("Issue Type", ""),
         data_dict.get("Action to be Taken", ""),
         data_dict.get("Incident Description", ""),
-        data_dict.get("Estimated/Annual Cost", ""),
         data_dict.get("Current Discipline Points", ""),
+        data_dict.get("Estimated/Annual Cost", ""),
         data_dict.get("Language Spoken", ""),
         data_dict.get("Previous Coaching/Warnings", "")
     ]
     sheet.append_row(row, value_input_option="USER_ENTERED")
+
 
 
 # === SESSION STATE INIT ===
