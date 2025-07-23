@@ -243,14 +243,12 @@ Incident Summary:
 
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
-The incident is summarized below:
-
-[Begin a new paragraph. Rewrite the supervisor’s description in a professional, detailed, and objective tone. Include background (like point history), the sequence of events, and policy relevance. Avoid repeating the same wording. Expand where needed.]
-
+The incident is summarized below:\n
+[Begin a new paragraph. Rewrite the supervisor’s description in a professional, detailed, and objective tone. Include background (like point history), the sequence of events, and policy relevance. Avoid repeating the same wording. Expand where needed.]\n
 If an estimated or annual cost is provided, add a final sentence: The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.
 
-Supervisor's Description:
-{latest['Incident Description']}
+"""
+
 
 Expectations Going Forward:
 Clearly explain what the employee must do differently, based on the issue.
