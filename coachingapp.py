@@ -243,7 +243,7 @@ Incident Summary:
 Start with:
 "On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:"
 
-Then, begin a new paragraph and rewrite the supervisor’s description into a clean, formal, detailed, and objective summary.
+[Insert a clear new paragraph here.] Rewrite the supervisor’s description into a clean, formal, detailed, and objective summary. Explain the background, policy impact, and any relevant point history. Expand context and mention cost only if applicable. DO NOT copy directly.
 
 Supervisor Description:
 {latest['Incident Description']}
