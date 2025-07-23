@@ -317,4 +317,4 @@ with tab2:
         st.line_chart(trend)
 
     except Exception as e:
-        st.error(f"❌ Could not load dashboard: {e}")
+        st.error(f"❌ No Info Logged: {e}")
