@@ -236,7 +236,7 @@ if st.session_state.submitted and not st.session_state.generated:
     latest = st.session_state.latest
     safe_name = latest["Employee Name"].replace(" ", "_")
 
-coaching_prompt = f"""
+    coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format.
 
 Incident Summary:
@@ -261,9 +261,6 @@ List 2–4 short keywords like attendance, policy violation, teamwork, etc.
 Severity:
 Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say “No severity level specified.”
 """
-
-
-
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
