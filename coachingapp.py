@@ -242,7 +242,7 @@ Issue Type: {latest['Issue Type']}
 Action Taken: {latest['Action to be Taken']}
 Description: {latest['Incident Description']}
 Current Points: {latest['Current Discipline Points']}
-
+"""
 
 
 
