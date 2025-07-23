@@ -53,23 +53,6 @@ def add_section_header(doc, text):
     run.bold = True
     run.font.size = Pt(12)
 
-def parse_coaching_sections(raw_text):
-    sections = {}
-    current_section = None
-    buffer = []
-    for line in raw_text.splitlines():
-        line = line.strip()
-        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
-            if current_section and buffer:
-                sections[current_section] = " ".join(buffer).strip()
-                buffer = []
-            current_section = line[:-1]
-        elif current_section:
-            buffer.append(line)
-    if current_section and buffer:
-        sections[current_section] = " ".join(buffer).strip()
-    return sections
-
 def build_coaching_doc(latest, coaching_dict):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
@@ -80,7 +63,10 @@ def build_coaching_doc(latest, coaching_dict):
         "Date of Incident", "Department", "Employee Name", "Supervisor Name",
         "Action to be Taken", "Issue Type", "Incident Description", "Estimated/Annual Cost",
         "Language Spoken", "Previous Coaching/Warnings", "Current Discipline Points"]:
-        add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
+        para = doc.add_paragraph()
+        run = para.add_run(f"{field}:")
+        run.bold = True
+        para.add_run(f" {latest.get(field, '[Missing]')}")
 
     doc.add_page_break()
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
@@ -88,7 +74,13 @@ def build_coaching_doc(latest, coaching_dict):
     for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
-            add_markdown_bold_paragraph(doc, coaching_dict[section])
+            # For the Incident Summary, do NOT bold anything inside
+            if section == "Incident Summary":
+                doc.add_paragraph(coaching_dict[section])
+            else:
+                para = doc.add_paragraph()
+                run = para.add_run(coaching_dict[section])
+                run.bold = False  # ensure content isn't bolded
 
     doc.add_paragraph("\nAcknowledgment of Receipt:")
     doc.add_paragraph(
@@ -97,9 +89,7 @@ def build_coaching_doc(latest, coaching_dict):
         "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-    
-    return doc  # ✅ This line must be inside the function (indented with the rest above!)
-
+    return doc
 
 
 def build_leadership_doc(latest, leadership_text):
