@@ -213,12 +213,14 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following format:
+You are a workplace coaching assistant. Generate a Workplace Coaching Report using the format below.
 
 Incident Summary:
-On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:
+Begin with:
+"On {latest['Date of Incident']}, in {latest['Department']}, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. The corrective action taken was {latest['Action to be Taken']}."
 
-> Rewrite the following supervisor description into a professional, detailed, and objective incident summary. Maintain a formal tone and clarify any confusing details for HR documentation:
+Then continue with a rewritten and professional summary of the following incident, improving clarity, tone, structure, and formality for HR documentation. Do not copy the original text directly — rephrase and organize it:
+
 {latest['Incident Description']}
 
 Expectations Going Forward:
