@@ -214,38 +214,37 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report using the format below.
+You are a workplace coaching assistant. Generate a Workplace Coaching Report in the following format:
 
 Incident Summary:
-Begin with:
-"On {latest['Date of Incident']}, in {latest['Department']}, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. The corrective action taken was {latest['Action to be Taken']}."
+Start with:
+"On {latest['Date of Incident']}, in the {latest['Department']} department, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. The corrective action taken was {latest['Action to be Taken']}, which was delivered on {date.today().strftime('%B %d, %Y')}."
 
-Then continue with a rewritten and professional summary of the following incident, improving clarity, tone, structure, and formality for HR documentation. Do not copy the original text directly — rephrase and organize it:
+Then, write a detailed summary of the incident based on the supervisor’s description below. Do **not** copy their words directly. Rewrite for clarity and professionalism, expand the context, explain the disciplinary points and what triggered the warning, and mention productivity or policy relevance if applicable.
 
+Supervisor Description:
 {latest['Incident Description']}
 
 Expectations Going Forward:
-Provide a clear and concise statement of expectations for the employee moving forward. Use a professional and direct tone.
+Clearly outline what the employee is expected to improve or do differently going forward.
 
 Tags:
-Provide 2–4 concise keywords that reflect the nature of the incident (e.g., attendance, performance, safety, policy violation).
+List 2–4 short keywords like attendance, policy violation, teamwork, etc.
 
 Severity:
-Extract any language from the description that suggests the level of urgency or seriousness (e.g., critical, moderate, minor). 
+Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say “No severity level specified.”
 
-[END OF REPORT CONTENT. DO NOT INCLUDE ANYTHING BELOW IN THE OUTPUT.]
+[END. DO NOT INCLUDE ANYTHING BELOW IN OUTPUT]
 
-    
-The following data is for reference only. Do not include it in any section above:
+Data:
 Supervisor: {latest['Supervisor Name']}
 Employee: {latest['Employee Name']}
 Department: {latest['Department']}
 Date of Incident: {latest['Date of Incident']}
-Issue Type: {latest['Issue Type']}
 Action Taken: {latest['Action to be Taken']}
-Description: {latest['Incident Description']}
 Current Points: {latest['Current Discipline Points']}
 """
+
 
 
 
