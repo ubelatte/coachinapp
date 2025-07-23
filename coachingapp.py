@@ -70,28 +70,6 @@ def parse_coaching_sections(raw_text):
         sections[current_section] = " ".join(buffer).strip()
     return sections
 
-def add_markdown_bold_paragraph(doc, text):
-    """
-    Parses text with **markdown bold** syntax and adds it to the Word doc with actual bold styling.
-    """
-    para = doc.add_paragraph()
-    bold = False
-    buffer = ''
-    i = 0
-    while i < len(text):
-        if text[i:i+2] == '**':
-            if buffer:
-                run = para.add_run(buffer)
-                run.bold = bold
-                buffer = ''
-            bold = not bold
-            i += 2
-        else:
-            buffer += text[i]
-            i += 1
-    if buffer:
-        run = para.add_run(buffer)
-        run.bold = bold
 
 def build_coaching_doc(latest, coaching_dict):
     doc = Document()
