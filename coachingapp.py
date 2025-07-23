@@ -239,8 +239,27 @@ if st.session_state.submitted and not st.session_state.generated:
     coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure and tone. Follow it exactly.
 
-Incident Summary:
+Tone & Focus Requirements:
+- Be factual and objective.
+- Reference Mestek policies or safety procedures if violated.
+- Clearly define expected improvements.
+- Use the document to educate and redirect, not punish.
+- Constructive and non-punitive unless it is a formal written warning.
+- Designed to correct behavior, ensure understanding, and support employee improvement.
+- Avoid accusatory or vague language.
+- Must be consistent with HR policies and state/federal labor laws.
 
+Policy References:
+- Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
+- Documentation must include facts, dates, behaviors, and prior expectations.
+- Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show (Factory Policies Packet 2025 – Attendance).
+- Reinforce respectful behavior for workplace conduct issues (Workplace Mutual Respect Policy).
+- Reference specific Safety Procedures for PPE or Machine Guarding violations (e.g., PPE #11, Guarding #09).
+- If safety is involved, cite applicable OSHA 29 CFR 1910 standards.
+- Include space for employee response. Acknowledge that signatures reflect receipt, not agreement.
+
+Structure:
+Incident Summary:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 - Rewrite the supervisor's description in a formal, detailed, and objective tone.
 - Include relevant background information (e.g., point history, leaves, previous actions).
@@ -248,6 +267,7 @@ On {latest['Date of Incident']}, at the {latest['Department']} location, employe
 - Mention any impact to productivity or policy. 
 - Include point progression or regression.
 - If a cost is provided, include: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
+- Conclude by noting: "Continued issues may result in progressive discipline, per Mestek guidelines."
 - Do not directly copy the supervisor’s description.
 
 Expectations Going Forward:
@@ -257,7 +277,7 @@ Tags:
 List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
-- Simply Restate which action was taken. (e.g., coahing, verbal warning, written warning, suspension, termination, etc.) 
+- Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
 """
 
 
