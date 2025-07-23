@@ -84,25 +84,11 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_page_break()
     doc.add_heading("Section 2 – AI-Generated Coaching Report", level=1)
-    import re
 
-def add_markdown_bold_paragraph(doc, text):
-    # Splits the text into parts where **bold** is isolated
-    parts = re.split(r'(\*\*.*?\*\*)', text)
-    para = doc.add_paragraph()
-    for part in parts:
-        if part.startswith("**") and part.endswith("**"):
-            run = para.add_run(part[2:-2])
-            run.bold = True
-        else:
-            para.add_run(part)
-
-# === Replace this section inside build_coaching_doc ===
-for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
-    if section in coaching_dict:
-        add_section_header(doc, section + ":")
-        add_markdown_bold_paragraph(doc, coaching_dict[section])
-
+    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+        if section in coaching_dict:
+            add_section_header(doc, section + ":")
+            add_markdown_bold_paragraph(doc, coaching_dict[section])
 
     doc.add_paragraph("\nAcknowledgment of Receipt:")
     doc.add_paragraph(
@@ -111,7 +97,8 @@ for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Sever
         "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
     doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-    return doc
+    
+    return doc  # ✅ This line must be inside the function (indented with the rest above!)
 
 
 
