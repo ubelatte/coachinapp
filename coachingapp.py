@@ -245,7 +245,8 @@ On {latest['Date of Incident']}, at the {latest['Department']} location, employe
 - Rewrite the supervisor's description in a formal, detailed, and objective tone.
 - Include relevant background information (e.g., point history, leaves, previous actions).
 - Expand on the timeline and explain the significance of the issue and the response.
-- Mention any impact to productivity or policy.
+- Mention any impact to productivity or policy. 
+- Include point progression or regression.
 - If a cost is provided, include: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
 - Do not directly copy the supervisor’s description.
 
