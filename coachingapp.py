@@ -241,9 +241,10 @@ You are a workplace coaching assistant. Generate a Workplace Coaching Report in 
 
 Incident Summary:
 Start with:
-"On  {latest['Date of Incident']} , in the  {latest['Department']}  department,  {latest['Employee Name']}  was involved in an issue related to  {latest['Issue Type']} . The corrective action taken was  {latest['Action to be Taken']} , which was delivered on  {date.today().strftime('%B %d, %Y')} ."
+"On {latest['Date of Incident']}, at the {latest['Department']} location, {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as a {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}. The incident is summarized below:"
 
-Then, write a detailed summary of the incident based on the supervisor’s description below. Do **not** copy their words directly. Rewrite for clarity and professionalism, expand the context, explain the disciplinary points and what triggered the warning, and mention productivity or policy relevance if applicable.
+Then, below that, start a new paragraph beginning with:
+">" and rewrite the supervisor’s description into a clean, formal, detailed, and objective summary. Explain the background, policy impact, and any relevant point history. Expand context and mention cost only if applicable. DO NOT copy directly.
 
 Supervisor Description:
 {latest['Incident Description']}
@@ -256,16 +257,6 @@ List 2–4 short keywords like attendance, policy violation, teamwork, etc.
 
 Severity:
 Choose one: Critical, High, Moderate, Minor — based on tone and seriousness. If unclear, say “No severity level specified.”
-
-[END. DO NOT INCLUDE ANYTHING BELOW IN OUTPUT]
-
-Data:
-Supervisor: {latest['Supervisor Name']}
-Employee: {latest['Employee Name']}
-Department: {latest['Department']}
-Date of Incident: {latest['Date of Incident']}
-Action Taken: {latest['Action to be Taken']}
-Current Points: {latest['Current Discipline Points']}
 """
 
 
