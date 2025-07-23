@@ -199,21 +199,30 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following:
-Incident Summary:
-Expectations Going Forward:
-Tags:
-Severity:
+    You are a workplace coaching assistant. Generate a Workplace Coaching Report with the following format:
 
-Data:
-Supervisor: {latest['Supervisor Name']}
-Employee: {latest['Employee Name']}
-Department: {latest['Department']}
-Date of Incident: {latest['Date of Incident']}
-Issue Type: {latest['Issue Type']}
-Action Taken: {latest['Action to be Taken']}
-Description: {latest['Incident Description']}
-"""
+    Incident Summary:
+    On {latest['Date of Incident']}, in {latest['Department']}, {latest['Employee Name']} was involved in an issue related to {latest['Issue Type']}. Expand professionally and constructively based on the supervisor’s description. Include background context if helpful and maintain the formal tone used in previous coaching documents.
+
+    Expectations Going Forward:
+    Provide a concise, directive explanation of what is expected from the employee going forward.
+
+    Tags:
+    Include 2–4 short keywords (e.g., attendance, performance, teamwork).
+
+    Severity:
+    DO NOT analyze or generate severity level. Simply include what was provided in the Incident Description if a severity term is mentioned. Otherwise, leave this section blank.
+
+    Data:
+    Supervisor: {latest['Supervisor Name']}
+    Employee: {latest['Employee Name']}
+    Department: {latest['Department']}
+    Date of Incident: {latest['Date of Incident']}
+    Issue Type: {latest['Issue Type']}
+    Action Taken: {latest['Action to be Taken']}
+    Description: {latest['Incident Description']}
+    """
+
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
