@@ -279,9 +279,6 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
 
-Employee Response:
-Leave this section blank. It will be completed by the employee at the time of acknowledgment.
-
 """
 
 
