@@ -263,7 +263,7 @@ Incident Summary:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 - Rewrite the supervisor's description in a formal, detailed, polite, and objective tone.
 - Include relevant background information (e.g., point history, leaves, previous actions).
-- Expand on the timeline and explain the significance of the issue and the response.
+- Expand on the timeline and explain the significance of the issue and the response, dont list, simply mention in the section.
 - Mention any impact to productivity or policy. 
 - Include point progression or regression.
 - Conclude by noting: "Continued issues may result in progressive discipline, per Mestek guidelines."
