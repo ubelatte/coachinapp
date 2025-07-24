@@ -246,7 +246,7 @@ Tone & Focus Requirements:
 - Use the document to educate and redirect, not punish.
 - Constructive and non-punitive unless it is a formal written warning.
 - Designed to correct behavior, ensure understanding, and support employee improvement.
-- Avoid accusatory or vague language.
+- Avoid accusatory or vague or aggressive language.
 - Must be consistent with HR policies and state/federal labor laws.
 
 Policy References:
@@ -266,7 +266,6 @@ On {latest['Date of Incident']}, at the {latest['Department']} location, employe
 - Expand on the timeline and explain the significance of the issue and the response.
 - Mention any impact to productivity or policy. 
 - Include point progression or regression.
-- If a cost is provided, include: "The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}."
 - Conclude by noting: "Continued issues may result in progressive discipline, per Mestek guidelines."
 - Do not directly copy the supervisor’s description.
 
