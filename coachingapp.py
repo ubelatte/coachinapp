@@ -271,13 +271,14 @@ On {latest['Date of Incident']}, at the {latest['Department']} location, employe
 - Do not directly copy the supervisor’s description.
 
 Expectations Going Forward:
-Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific.
+Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
 
 Tags:
 List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
+
 """
 
 
