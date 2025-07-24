@@ -59,7 +59,7 @@ def parse_coaching_sections(raw_text):
     buffer = []
     for line in raw_text.splitlines():
         line = line.strip()
-        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken", "Employee Response"]:
             if current_section and buffer:
                 sections[current_section] = " ".join(buffer).strip()
                 buffer = []
@@ -107,7 +107,7 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_page_break()
     doc.add_heading("Section 2 – Coaching Report", level=1)
-    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]:
+    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken", "Employee Response"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
             add_markdown_bold_paragraph(doc, coaching_dict[section])  # ✅ real bold from markdown
@@ -278,6 +278,9 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
+
+Employee Response:
+Leave this section blank. It will be completed by the employee at the time of acknowledgment.
 
 """
 
