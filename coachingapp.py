@@ -261,15 +261,19 @@ Policy References:
 Structure:
 Incident Summary:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
-- Rewrite the supervisor's description in a formal, detailed, polite, and objective tone.
-- Include relevant background information (e.g., point history, leaves, previous actions).
-- Do not use headers such as "Employee Background:" or "Timeline Significance:"...
-- Includes exact dates in MM/DD/YYYY format
-- Write a flowing paragraph...
-- Mention any impact to productivity or policy. 
-- Include point progression or regression.
-- Conclude by noting: "Continued issues may result in progressive discipline, per Mestek guidelines."
-- Do not directly copy the supervisor’s description.
+
+Write one cohesive paragraph with no section labels. Include all of the following in flowing, natural language:
+- The date and department of the incident (in MM/DD/YYYY format).
+- The employee's full name and the issue type.
+- The action taken (e.g., Written Warning).
+- Specific disciplinary history (e.g., current point total, prior warnings, or approved leaves).
+- A description of what occurred (e.g., late arrival, no call/no show).
+- Any operational or productivity impact.
+- Reference the relevant Mestek policy (e.g., Attendance and Points System).
+- If a cost is provided: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
+- End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
+- Do not use bold headers or phrases like “Employee Background” or “Timeline.” Do not use lists or bullet points. Write this as one unified paragraph.
+
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
