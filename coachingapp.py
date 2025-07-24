@@ -262,17 +262,18 @@ Structure:
 Incident Summary:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
-Write one cohesive paragraph with no section labels. Include all of the following in flowing, natural language:
-- The date and department of the incident (in MM/DD/YYYY format).
-- The employee's full name and the issue type.
+Write one cohesive paragraph with no section labels, headings, or bolded headers. Your summary must read like a narrative. Include all of the following elements in natural, flowing language:
+
+- The date and department of the incident, using MM/DD/YYYY format.
+- The employee’s full name and the issue type.
 - The action taken (e.g., Written Warning).
-- Specific disciplinary history (e.g., current point total, prior warnings, or approved leaves).
-- A description of what occurred (e.g., late arrival, no call/no show).
-- Any operational or productivity impact.
-- Reference the relevant Mestek policy (e.g., Attendance and Points System).
-- If a cost is provided: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
+- Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
+- A detailed description of the event that occurred on the reported date.
+- Any impact to productivity, operations, or team performance.
+- Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
+- If a cost was reported, include: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
 - End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
-- Do not use bold headers or phrases like “Employee Background” or “Timeline.” Do not use lists or bullet points. Write this as one unified paragraph.
+- Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
 
 
 Expectations Going Forward:
