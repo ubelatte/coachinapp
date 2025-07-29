@@ -353,6 +353,126 @@ Issue Type: {latest['Issue Type']}
 Description: {latest['Incident Description']}
 """
 
+
+with tab1:
+    with st.form("coaching_form"):
+        supervisor = st.selectbox("Supervisor Name", [
+            "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
+            "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
+        employee = st.text_input("Employee Name")
+        department = st.selectbox("Department", [
+            "Rough In", "Paint Line (NP)", "Commercial Fabrication",
+            "Baseboard Accessories", "Maintenance", "Residential Fabrication",
+            "Residential Assembly/Packing", "Warehouse (55WIPR)",
+            "Convector & Twin Flo", "Shipping/Receiving/Drivers",
+            "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"])
+        incident_date = st.date_input("Date of Incident", value=date.today())
+        issue_type = st.selectbox("Issue Type", [
+            "Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"])
+        action_taken = st.selectbox("Action to be Taken", [
+            "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
+        description = st.text_area("Incident Description")
+        points = st.text_input("Current Discipline Points")
+        estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
+        language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
+        language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
+        previous = st.text_area("Previous Coaching/Warnings (if any)", placeholder="e.g., Verbal warning issued on 7/1 for tardiness.")
+        submitted = st.form_submit_button("Generate Coaching Report")
+
+    if submitted:
+        st.session_state.submitted = True
+        st.session_state.generated = False
+        st.session_state.latest = {
+            "Timestamp": date.today().isoformat(),
+            "Supervisor Name": supervisor,
+            "Employee Name": employee,
+            "Department": department,
+            "Date of Incident": incident_date.strftime("%Y-%m-%d"),
+            "Issue Type": issue_type,
+            "Action to be Taken": action_taken,
+            "Incident Description": description,
+            "Current Discipline Points": points,
+            "Estimated/Annual Cost": estimated_cost,
+            "Language Spoken": language,
+            "Previous Coaching/Warnings": previous
+        }
+
+if st.session_state.submitted and not st.session_state.generated:
+    latest = st.session_state.latest
+    safe_name = latest["Employee Name"].replace(" ", "_")
+
+incident_description = latest.get('Incident Description', 'N/A')
+current_points = latest.get('Current Discipline Points', 'N/A')
+prior_warnings = latest.get('Previous Coaching/Warnings', 'None')
+discipline_info = f"Current points: {current_points}. Prior warnings: {prior_warnings}."
+
+coaching_prompt = f"""
+You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure and tone. Follow it exactly.
+
+Tone & Focus Requirements:
+- Be factual and objective but not cold.
+- Reference Mestek policies or safety procedures if violated.
+- Clearly define expected improvements.
+- Use the document to educate and redirect, not punish.
+- Constructive and non-punitive unless it is a formal written warning.
+- Designed to correct behavior, ensure understanding, and support employee improvement.
+- Avoid accusatory or vague or aggressive language.
+- Must be consistent with HR policies and state/federal labor laws.
+
+Policy References:
+- Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
+- Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show (refer to Factory Policies Packet 2025 – Attendance).
+- Reinforce respectful behavior for workplace conduct issues (Workplace Mutual Respect Policy).
+- Reference specific Safety Procedures for PPE or Machine Guarding violations (e.g., PPE #11, Guarding #09).
+- If safety is involved, cite applicable OSHA 29 CFR 1910 standards.
+- Include space for employee response. Acknowledge that signatures reflect receipt, not agreement.
+
+Structure:
+Incident Summary:
+On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
+
+Write one cohesive paragraph with no section labels, headings, or bolded headers. Your summary must read like a narrative. Include all of the following elements in natural, flowing language:
+
+- The date and department of the incident, using MM/DD/YYYY format.
+- The employee’s full name and the issue type.
+- The action taken (e.g., Written Warning).
+- Attendance or disciplinary history: {discipline_info}
+- A detailed description of the event: {incident_description}
+- Any impact to productivity, operations, or team performance.
+- Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
+- End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
+- Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
+
+Expectations Going Forward:
+Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
+
+Tags:
+List 2-4 short keywords (e.g., attendance, policy violation, safety).
+
+Action Taken:
+Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
+"""
+
+
+
+
+
+leadership_prompt = f"""
+You are a leadership coach. Write a private reflection including:
+Private Reflection:
+Coaching Tips:
+Tone Guidance:
+Follow-Up Recommendation:
+Supervisor Accountability Tip:
+
+Info:
+Supervisor: {latest['Supervisor Name']}
+Employee: {latest['Employee Name']}
+Department: {latest['Department']}
+Issue Type: {latest['Issue Type']}
+Description: {latest['Incident Description']}
+"""
+
 with st.spinner("Generating documents..."):
         coaching_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -390,6 +510,57 @@ with st.spinner("Generating documents..."):
     st.session_state.safe_name = safe_name
     st.session_state.generated = True
 
+if st.session_state.get("generated", False):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button("📄 Download Coaching Doc", data=st.session_state.coaching_io,
+                           file_name=f"{st.session_state.safe_name}_coaching.docx")
+    with col2:
+        st.download_button("📄 Download Leadership Doc", data=st.session_state.leadership_io,
+                           file_name=f"{st.session_state.safe_name}_leadership.docx")
+
+
+# === TREND DASHBOARD ===
+with tab2:
+    st.header("📊 Coaching Trend Dashboard")
+    try:
+        df = pd.DataFrame(sheet.get_all_records())
+        df["Date of Incident"] = pd.to_datetime(df["Date of Incident"], errors="coerce")
+
+        min_date = df["Date of Incident"].min()
+        max_date = df["Date of Incident"].max()
+        start_date, end_date = st.date_input("Filter by Date Range", [min_date, max_date], key="date_range_filter")
+
+        if start_date and end_date:
+            df = df[(df["Date of Incident"] >= pd.to_datetime(start_date)) & (df["Date of Incident"] <= pd.to_datetime(end_date))]
+
+        filter_action = st.selectbox(
+            "Filter by Action Taken",
+            ["All"] + df["Action to be Taken"].dropna().unique().tolist(),
+            key="trend_action_filter"
+        )
+        if filter_action != "All":
+            df = df[df["Action to be Taken"] == filter_action]
+
+        st.dataframe(df)
+
+        st.subheader("Issue Type Count")
+        issue_counts = df["Issue Type"].value_counts().reset_index()
+        issue_counts.columns = ["Issue Type", "Count"]
+        chart = alt.Chart(issue_counts).mark_bar().encode(
+            x=alt.X("Issue Type", sort="-y"),
+            y="Count",
+            tooltip=["Issue Type", "Count"]
+        ).properties(width=600, height=400)
+        st.altair_chart(chart, use_container_width=True)
+
+        st.subheader("Actions Over Time")
+        df["Date Only"] = df["Date of Incident"].dt.date
+        trend = df.groupby(["Date Only", "Action to be Taken"]).size().unstack(fill_value=0)
+        st.line_chart(trend)
+
+    except Exception as e:
+        st.error(f"❌ No Info Logged: {e}")
 if st.session_state.get("generated", False):
     col1, col2 = st.columns(2)
     with col1:
