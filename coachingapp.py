@@ -265,6 +265,7 @@ Write one cohesive paragraph with no section labels, headings, or bolded headers
 - The date and department of the incident, using MM/DD/YYYY format.
 - The employee’s full name and the issue type.
 - The action taken (e.g., Written Warning).
+- Do not assume lateness if the incident involved leaving early or another type of attendance issue.
 - Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
 - A detailed description of the event that is accurate based on the Incident Description.
 - Any impact to productivity, operations, or team performance.
