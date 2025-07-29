@@ -107,7 +107,7 @@ def build_coaching_doc(latest, coaching_dict):
 
     doc.add_page_break()
     doc.add_heading("Section 2 – Coaching Report", level=1)
-    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken"]:
+    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Action Taken"]:
         if section in coaching_dict:
             add_section_header(doc, section + ":")
             add_markdown_bold_paragraph(doc, coaching_dict[section])  # ✅ real bold from markdown
@@ -248,8 +248,6 @@ Tone & Focus Requirements:
 - Designed to correct behavior, ensure understanding, and support employee improvement.
 - Avoid accusatory or vague or aggressive language.
 - Must be consistent with HR policies and state/federal labor laws.
-
-Policy References:
 - Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
 - Documentation must include facts, dates, behaviors, and prior expectations.
 - Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show (refer to Factory Policies Packet 2025 – Attendance).
@@ -268,10 +266,9 @@ Write one cohesive paragraph with no section labels, headings, or bolded headers
 - The employee’s full name and the issue type.
 - The action taken (e.g., Written Warning).
 - Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
-- A detailed description of the event that occurred on the reported date.
+- A detailed description of the event that is accurate based on the Incident Description.
 - Any impact to productivity, operations, or team performance.
 - Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
-- If a cost was reported, include: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
 - End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
 - Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
 
