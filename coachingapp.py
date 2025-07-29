@@ -59,7 +59,7 @@ def parse_coaching_sections(raw_text):
     buffer = []
     for line in raw_text.splitlines():
         line = line.strip()
-        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Action Taken"]:
+        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken"]:
             if current_section and buffer:
                 sections[current_section] = " ".join(buffer).strip()
                 buffer = []
@@ -246,27 +246,35 @@ Tone & Focus Requirements:
 - Use the document to educate and redirect, not punish.
 - Constructive and non-punitive unless it is a formal written warning.
 - Designed to correct behavior, ensure understanding, and support employee improvement.
-- Avoid accusatory, vague, or aggressive language.
-- Must comply with HR policies and labor laws.
+- Avoid accusatory or vague or aggressive language.
+- Must be consistent with HR policies and state/federal labor laws.
 
-Mestek Policy References:
+Policy References:
 - Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
-- Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show.
-- Cite the Workplace Mutual Respect Policy for conduct issues.
-- Use Safety Procedures (e.g., PPE #11, Guarding #09) or OSHA 29 CFR 1910 for safety violations.
-- Signatures reflect receipt, not agreement.
+- Documentation must include facts, dates, behaviors, and prior expectations.
+- Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show (refer to Factory Policies Packet 2025 – Attendance).
+- Reinforce respectful behavior for workplace conduct issues (Workplace Mutual Respect Policy).
+- Reference specific Safety Procedures for PPE or Machine Guarding violations (e.g., PPE #11, Guarding #09).
+- If safety is involved, cite applicable OSHA 29 CFR 1910 standards.
+- Include space for employee response. Acknowledge that signatures reflect receipt, not agreement.
 
 Structure:
-Write one cohesive paragraph with no section labels, bold headers, or bullet points. Your paragraph must read like a natural workplace report and include the following details:
+Incident Summary:
+On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
-- On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention.
-- The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
-- Attendance or disciplinary history: current points = {latest['Current Discipline Points']}, prior warnings = {latest['Previous Coaching/Warnings']}.
-- Description of the incident: {latest['Incident Description']}
-- Any known impacts on productivity, operations, or team dynamics.
-- Reference the appropriate policy that justifies the action taken.
-- If a cost was reported, include this sentence: The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.
-- End with this sentence: Continued issues may result in progressive discipline, per Mestek guidelines.
+Write one cohesive paragraph with no section labels, headings, or bolded headers. Your summary must read like a narrative. Include all of the following elements in natural, flowing language:
+
+- The date and department of the incident, using MM/DD/YYYY format.
+- The employee’s full name and the issue type.
+- The action taken (e.g., Written Warning).
+- Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
+- A detailed description of the event that occurred on the reported date.
+- Any impact to productivity, operations, or team performance.
+- Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
+- If a cost was reported, include: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
+- End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
+- Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
+
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
