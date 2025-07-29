@@ -251,7 +251,6 @@ Tone & Focus Requirements:
 
 Policy References:
 - Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
-- Documentation must include facts, dates, behaviors, and prior expectations.
 - Use the Attendance and Points System for absenteeism, tardiness, or no-call/no-show (refer to Factory Policies Packet 2025 – Attendance).
 - Reinforce respectful behavior for workplace conduct issues (Workplace Mutual Respect Policy).
 - Reference specific Safety Procedures for PPE or Machine Guarding violations (e.g., PPE #11, Guarding #09).
@@ -268,7 +267,7 @@ Write one cohesive paragraph with no section labels, headings, or bolded headers
 - The employee’s full name and the issue type.
 - The action taken (e.g., Written Warning).
 - Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
-- A detailed description of the event that occurred on the reported date.
+- A detailed description of the event that occurred on the reported date WITH accuracy.
 - Any impact to productivity, operations, or team performance.
 - Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
 - End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
