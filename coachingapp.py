@@ -337,7 +337,7 @@ Simply restate which action was taken. (e.g., coaching, verbal warning, written 
 
 
 
-    leadership_prompt = f"""
+leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
 Private Reflection:
 Coaching Tips:
