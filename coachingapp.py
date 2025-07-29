@@ -256,7 +256,7 @@ Mestek Policy References:
 - Use Safety Procedures (e.g., PPE #11, Guarding #09) or OSHA 29 CFR 1910 for safety violations.
 - Signatures reflect receipt, not agreement.
 
-Instructions:
+Structure:
 Write one cohesive paragraph with no section labels, bold headers, or bullet points. Your paragraph must read like a natural workplace report and include the following details:
 
 - On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention.
