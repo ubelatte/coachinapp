@@ -247,6 +247,7 @@ Tone & Focus Requirements:
 - Constructive and non-punitive unless it is a formal written warning.
 - Designed to correct behavior, ensure understanding, and support employee improvement.
 - Avoid accusatory or vague or aggressive language.
+- Do not describe the infraction as "late" unless lateness is explicitly mentioned. If the employee left early, say so directly.
 - Must be consistent with HR policies and state/federal labor laws.
 - Counseling is a first step in the progressive discipline process (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
 - Documentation must include facts, dates, behaviors, and prior expectations.
