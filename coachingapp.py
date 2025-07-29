@@ -54,21 +54,31 @@ def add_section_header(doc, text):
     run.font.size = Pt(12)
 
 def parse_coaching_sections(raw_text):
+    allowed_sections = [
+        "Incident Summary", "Expectations Going Forward", 
+        "Tone Guidance", "Coaching Tips", "Tags", 
+        "Follow-Up Recommendation", "Accountability Tip"
+    ]
+    
     sections = {}
     current_section = None
     buffer = []
+    
     for line in raw_text.splitlines():
         line = line.strip()
-        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken"]:
+        if line.endswith(":") and line[:-1] in allowed_sections:
             if current_section and buffer:
                 sections[current_section] = " ".join(buffer).strip()
                 buffer = []
             current_section = line[:-1]
         elif current_section:
             buffer.append(line)
+    
     if current_section and buffer:
         sections[current_section] = " ".join(buffer).strip()
+    
     return sections
+
 
 def add_markdown_bold_paragraph(doc, text):
     """
@@ -282,7 +292,6 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
-
 """
 
 
