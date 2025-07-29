@@ -237,35 +237,40 @@ if st.session_state.submitted and not st.session_state.generated:
     safe_name = latest["Employee Name"].replace(" ", "_")
 
     coaching_prompt = f"""
-You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below. Follow all instructions exactly and do not copy any wording directly from the incident description.
+You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below. Follow all instructions exactly and do not add or reinterpret information.
 
 Tone & Focus Requirements:
-- Use a factual, calm, and professional tone.
-- Do NOT repeat phrases from the Incident Description field.
-- Rewrite all information in your own natural, formal style using new sentence structures.
-- Avoid sounding robotic or overly templated.
-- Avoid assumptions. Do not infer behavior or intent beyond what is written.
-- If the employee left early, say that plainly. Do not describe it as "late" unless that word is explicitly provided.
-- Cite Mestek policy only if the issue is clearly related to Attendance, Conduct, or Safety.
+- Be factual and objective, not cold or accusatory.
+- Use neutral, professional language.
+- Reference Mestek policies or safety procedures only if clearly stated in the input.
+- Do not assume anything that is not explicitly provided in the form data.
+- If the employee left early, say “left early.” Do not describe it as “late” unless “late” is explicitly mentioned.
+- Do not make assumptions about employee behavior or intent.
+- If prior coaching/warnings are provided, state them. If not, do not infer any.
+- Avoid filler phrases like “without notifying supervisor” unless stated.
+- Designed to redirect behavior, clarify expectations, and support improvement.
+- Must be consistent with HR policies and state/federal labor laws.
 
 Policy Context (use only if relevant based on form data):
-- Progressive discipline begins with counseling (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
-- For attendance issues, cite the Attendance and Points System.
-- For conduct issues, cite the Workplace Mutual Respect Policy.
-- For safety issues, cite OSHA 29 CFR 1910 or internal policies like PPE #11 or Guarding #09.
+- Counseling is part of progressive discipline (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
+- Use Attendance and Points System for absence/tardiness/no-call-no-show cases.
+- Cite Workplace Mutual Respect Policy for conduct-related issues.
+- Reference OSHA 29 CFR 1910 or internal Safety Procedures (e.g., PPE #11) for safety violations.
 
 Structure:
-Write one professional paragraph, not labeled or broken into sections. Begin with this base sentence, using field data:
+Incident Summary:
+Write a single, natural-sounding paragraph with no bullet points, headings, or bold text.
 
+Start the paragraph with this sentence using the provided fields:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
-Continue naturally, using the following guidelines:
-- Explain the situation in your own words, using the facts in {latest['Incident Description']}, but DO NOT COPY or PARROT the original text.
-- If the employee left early, state that clearly. Do not say “late” unless it appears in the form.
-- If relevant, briefly include any prior history from {latest['Previous Coaching/Warnings']} using phrasing like: “There was a prior coaching on...”
-- If the field {latest['Estimated/Annual Cost']} is filled in, include a sentence: “The estimated or associated cost of this issue is...”
-- Reference a Mestek policy ONLY if appropriate and mentioned by category.
-- Close with the standard line: “Continued issues may result in progressive discipline, per Mestek guidelines.”
+Then, continue the paragraph using the following rules:
+- Summarize the event based on {latest['Incident Description']}, but do not copy the wording. Rephrase and structure it as a factual, professional account.
+- Do not say "late" unless lateness is explicitly stated.
+- If the Previous Coaching/Warnings field is filled out, include a sentence like: “Prior coaching includes: {latest['Previous Coaching/Warnings']}.”
+- If a cost is included in the Estimated/Annual Cost field, write: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
+- Include a reference to a Mestek policy only if the issue type is Attendance, Safety, or Conduct. For example: “This action is in accordance with the Attendance and Points System outlined in the Factory Policies Packet 2025.”
+- End the paragraph with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
