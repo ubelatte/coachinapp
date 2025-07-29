@@ -271,7 +271,6 @@ Write one cohesive paragraph with no section labels, headings, or bolded headers
 - A detailed description of the event that occurred on the reported date.
 - Any impact to productivity, operations, or team performance.
 - Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
-- If a cost was reported, include: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
 - End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
 - Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
 
