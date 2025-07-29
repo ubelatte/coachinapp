@@ -286,7 +286,7 @@ current_points = latest.get('Current Discipline Points', 'N/A')
 prior_warnings = latest.get('Previous Coaching/Warnings', 'None')
 discipline_info = f"Current points: {current_points}. Prior warnings: {prior_warnings}."
 
-    coaching_prompt = f"""
+coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure and tone. Follow it exactly.
 
 Tone & Focus Requirements:
