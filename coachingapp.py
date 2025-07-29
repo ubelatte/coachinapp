@@ -265,7 +265,7 @@ Start the paragraph with this sentence using the provided fields:
 On {latest['Date of Incident']}, at the {latest['Department']} location, employee {latest['Employee Name']} was involved in a situation that required supervisory intervention. The issue was identified as {latest['Issue Type']}, and the corrective action taken was {latest['Action to be Taken']}.
 
 Then, continue the paragraph using the following rules:
-- Use the field {latest['Incident Description']} word-for-word as the basis for the event details. Do not paraphrase or invent content.
+- Summarize the event based on {latest['Incident Description']}, but do not copy the wording. Rephrase and structure it as a factual, professional account.
 - Do not say "late" unless lateness is explicitly stated.
 - If the Previous Coaching/Warnings field is filled out, include a sentence like: “Prior coaching includes: {latest['Previous Coaching/Warnings']}.”
 - If a cost is included in the Estimated/Annual Cost field, write: “The estimated or associated cost of this issue is {latest['Estimated/Annual Cost']}.”
