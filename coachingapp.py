@@ -103,40 +103,69 @@ def add_markdown_bold_paragraph(doc, text):
         run = para.add_run(buffer)
         run.bold = bold
 
-def build_coaching_doc(latest, coaching_dict):
-    doc = Document()
-    doc.add_heading("Employee Coaching & Counseling Form", 0)
-    doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
+def build_coaching_doc(latest, coaching_output):
+    from docx import Document
+    from docx.shared import Pt
+    from io import BytesIO
 
-    doc.add_heading("Section 1 – Supervisor Entry", level=1)
-    for field in [
-        "Date of Incident", "Department", "Employee Name", "Supervisor Name",
-        "Action to be Taken", "Issue Type", "Incident Description", "Estimated/Annual Cost",
-        "Language Spoken", "Previous Coaching/Warnings", "Current Discipline Points"]:
-        add_bold_para(doc, field + ":", latest.get(field, "[Missing]"))
+    def add_section_header(doc, text):
+        para = doc.add_paragraph()
+        run = para.add_run(text)
+        run.bold = True
+        para.space_after = Pt(6)
 
-    doc.add_page_break()
-    doc.add_heading("Section 2 – Coaching Report", level=1)
-
-    for section in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken"]:
-        if section in coaching_dict:
-            if section != "Incident Summary":
-                add_section_header(doc, section + ":")
-                add_markdown_bold_paragraph(doc, coaching_dict[section])
+    def add_markdown_bold_paragraph(doc, text):
+        lines = text.strip().split("\n")
+        for line in lines:
+            if "**" in line:
+                clean = line.replace("**", "").strip()
+                para = doc.add_paragraph()
+                run = para.add_run(clean)
+                run.bold = True
             else:
-                # No header, just the paragraph
-                add_markdown_bold_paragraph(doc, coaching_dict[section])
+                doc.add_paragraph(line)
 
-    doc.add_paragraph("\nAcknowledgment of Receipt:")
-    doc.add_paragraph(
-        "I understand that this document serves as a formal record of the counseling provided. "
-        "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
-    doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
-    doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
-    return doc
+    doc = Document()
 
+    # === SECTION 1: Supervisor Entry ===
+    doc.add_heading("Section 1: Supervisor Entry", level=1)
+    for field in [
+        "Employee Name", "Supervisor Name", "Employee Date of Hire",
+        "Review Type", "Appraisal Period", "Department", "Date of Incident",
+        "Issue Type", "Action to be Taken", "Estimated/Annual Cost",
+        "Language Spoken", "Previous Coaching/Warnings"
+    ]:
+        value = latest.get(field, "")
+        doc.add_paragraph(f"{field}: {value}", style="Normal")
 
+    doc.add_paragraph("\n")
+
+    # === SECTION 2: AI-Generated Coaching Report ===
+    doc.add_heading("Section 2: AI-Generated Coaching Report", level=1)
+
+    sections = ["Incident Summary", "Expectations Going Forward", "Tags", "Severity"]
+    for section in sections:
+        header = f"**{section}**:"
+        pattern = rf"\*\*{re.escape(section)}\*\*:(.*?)(?=\n\*\*|\Z)"
+        match = re.search(pattern, coaching_output, re.DOTALL)
+        content = match.group(1).strip() if match else "[Not Provided]"
+        add_section_header(doc, section + ":")
+        doc.add_paragraph(content)
+
+    # === ACTION TAKEN FROM FORM, NOT GPT ===
+    add_section_header(doc, "Action Taken:")
+    doc.add_paragraph(latest.get("Action to be Taken", "[No action recorded]"))
+
+    # === SIGNATURE SECTION ===
+    doc.add_paragraph("\nAcknowledgment:\n")
+    doc.add_paragraph("Employee Signature: _________________________    Date: ____________")
+    doc.add_paragraph("Supervisor Signature: _______________________    Date: ____________")
+
+    # === SAVE DOCX TO MEMORY ===
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
 
 
 def build_leadership_doc(latest, leadership_text):
@@ -252,6 +281,11 @@ if st.session_state.submitted and not st.session_state.generated:
     latest = st.session_state.latest
     safe_name = latest["Employee Name"].replace(" ", "_")
 
+incident_description = latest.get('Incident Description', 'N/A')
+current_points = latest.get('Current Discipline Points', 'N/A')
+prior_warnings = latest.get('Previous Coaching/Warnings', 'None')
+discipline_info = f"Current points: {current_points}. Prior warnings: {prior_warnings}."
+
     coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using this structure and tone. Follow it exactly.
 
@@ -282,13 +316,12 @@ Write one cohesive paragraph with no section labels, headings, or bolded headers
 - The date and department of the incident, using MM/DD/YYYY format.
 - The employee’s full name and the issue type.
 - The action taken (e.g., Written Warning).
-- Attendance or disciplinary history (e.g., current point total, approved leaves, prior warnings).
-- A detailed description of the event that occurred on the reported date WITH accuracy.
+- Attendance or disciplinary history: {discipline_info}
+- A detailed description of the event: {incident_description}
 - Any impact to productivity, operations, or team performance.
 - Cite the relevant Mestek policy that justifies the action taken (e.g., Attendance and Points System from the Factory Policies Packet 2025).
 - End with: “Continued issues may result in progressive discipline, per Mestek guidelines.”
 - Do NOT use any bold labels or headers (e.g., “Employee Background”, “Timeline”, etc). Do NOT use lists or bullet points. Write as a single, complete paragraph.
-
 
 Expectations Going Forward:
 Clearly explain what the employee is expected to change or improve. Be firm, supportive, and specific. Speak in third person (do not use pronouns like "you")
@@ -299,6 +332,7 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
 """
+
 
 
 
