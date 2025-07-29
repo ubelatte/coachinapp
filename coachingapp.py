@@ -59,7 +59,7 @@ def parse_coaching_sections(raw_text):
     buffer = []
     for line in raw_text.splitlines():
         line = line.strip()
-        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Severity", "Action Taken"]:
+        if line.endswith(":") and line[:-1] in ["Incident Summary", "Expectations Going Forward", "Tags", "Action Taken"]:
             if current_section and buffer:
                 sections[current_section] = " ".join(buffer).strip()
                 buffer = []
