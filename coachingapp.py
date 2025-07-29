@@ -353,13 +353,13 @@ Issue Type: {latest['Issue Type']}
 Description: {latest['Incident Description']}
 """
 
-    with st.spinner("Generating documents..."):
+with st.spinner("Generating documents..."):
         coaching_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": coaching_prompt}]
         ).choices[0].message.content.strip()
 
-        if latest['Language Spoken'].lower() != "english":
+    if latest['Language Spoken'].lower() != "english":
             coaching_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}\n{coaching_response}"}]
