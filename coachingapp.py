@@ -317,7 +317,7 @@ Issue Type: {latest['Issue Type']}
 Description: {latest['Incident Description']}
 """
 
-        with st.spinner("Generating documents..."):
+    with st.spinner("Generating documents..."):
         coaching_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": coaching_prompt}]
