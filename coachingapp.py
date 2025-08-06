@@ -283,6 +283,7 @@ Tone & Focus Requirements:
 - Avoid filler phrases like “without notifying supervisor” unless stated.
 - Designed to redirect behavior, clarify expectations, and support improvement.
 - Must be consistent with HR policies and state/federal labor laws.
+- If Language Spoken is "Spanish," translate to spanish. OTHERWISE, keep in English
 
 Policy Context (use only if relevant based on form data):
 - Counseling is part of progressive discipline (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
