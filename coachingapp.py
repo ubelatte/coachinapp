@@ -247,17 +247,30 @@ with tab1:
             "Previous Coaching/Warnings": previous
         }
 
+# === FIXED SECTION FOR SPANISH TRANSLATION ===
+
 if st.session_state.submitted and not st.session_state.generated:
     latest = st.session_state.latest
     safe_name = latest["Employee Name"].replace(" ", "_")
 
-    # Add language instruction at this point
+    # Inject language instruction at the top if not English
     language_instruction = ""
     if latest['Language Spoken'].lower() != "english":
-        language_instruction = f"Please write the entire coaching report in {latest['Language Spoken']}, but keep all section headers in English exactly as written.\n\n"
+        language_instruction = f"""
+Please write the entire coaching report in {latest['Language Spoken']}.
 
+However, keep the following section headers exactly in English (do NOT translate them):
+Incident Summary:
+Expectations Going Forward:
+Tags:
+Action Taken:
+
+Translate only the content underneath each section.
+"""
+
+    # Combine language instruction + original coaching prompt
     coaching_prompt = f"""{language_instruction}
-You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below...
+You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below. Follow all instructions exactly and do not add or reinterpret information.
 
 Tone & Focus Requirements:
 - Be factual and objective, not cold or accusatory.
@@ -300,11 +313,7 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
-
 """
-
-
-
 
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
@@ -328,17 +337,12 @@ Description: {latest['Incident Description']}
             messages=[{"role": "user", "content": coaching_prompt}]
         ).choices[0].message.content.strip()
 
-        if latest['Language Spoken'].lower() != "english":
-            coaching_response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}\n{coaching_response}"}]
-            ).choices[0].message.content.strip()
-
         leadership_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": leadership_prompt}]
         ).choices[0].message.content.strip()
 
+    # Parse and build
     coaching_sections = parse_coaching_sections(coaching_response)
     coaching_io = BytesIO()
     build_coaching_doc(latest, coaching_sections).save(coaching_io)
@@ -358,6 +362,7 @@ Description: {latest['Incident Description']}
     st.session_state.leadership_io = leadership_io
     st.session_state.safe_name = safe_name
     st.session_state.generated = True
+
 
 if st.session_state.get("generated", False):
     col1, col2 = st.columns(2)
