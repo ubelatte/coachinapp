@@ -345,6 +345,22 @@ Description: {latest['Incident Description']}
         """ }]
             ).choices[0].message.content.strip()
 
+            translated_ack = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "user",
+                    "content": f"""
+        Translate this acknowledgment and labels into {latest['Language Spoken']}. Do not add anything. Keep formatting.
+
+        Text:
+        Acknowledgment of Receipt:
+        I understand that this document serves as a formal record of the counseling provided. I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.
+        Employee Signature: _________________________        Date: ________________
+        Supervisor Signature: ________________________        Date: ________________
+        """ }]
+            ).choices[0].message.content.strip()
+
+        
 # ⬇️ Continue as usual
         leadership_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
