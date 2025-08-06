@@ -249,7 +249,7 @@ with tab1:
 
 
     # Combine language instruction + original coaching prompt
-    coaching_prompt = f"""{language_instruction}
+    coaching_prompt = f"""
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below. Follow all instructions exactly and do not add or reinterpret information.
 
 Tone & Focus Requirements:
