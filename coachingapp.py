@@ -323,16 +323,34 @@ Description: {latest['Incident Description']}
             messages=[{"role": "user", "content": coaching_prompt}]
         ).choices[0].message.content.strip()
 
+# ✅ ADD THIS BLOCK HERE — before leadership_response
         if latest['Language Spoken'].lower() != "english":
             coaching_response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Translate into {latest['Language Spoken']}\n{coaching_response}"}]
+                messages=[{
+                    "role": "user",
+                    "content": f"""
+        Translate the following coaching report into {latest['Language Spoken']}.
+
+        ⚠️ Keep these section headers exactly in English:
+        Incident Summary:
+        Expectations Going Forward:
+        Tags:
+        Action Taken:
+
+        Translate only the section text. Do not change or remove the English headers.
+
+        ---
+        {coaching_response}
+        """ }]
             ).choices[0].message.content.strip()
 
+# ⬇️ Continue as usual
         leadership_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": leadership_prompt}]
         ).choices[0].message.content.strip()
+
 
     coaching_sections = parse_coaching_sections(coaching_response)
     coaching_io = BytesIO()
