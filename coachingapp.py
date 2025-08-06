@@ -32,10 +32,12 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Enter password:", type="password")
     if password_input == "mestek":
         st.session_state.authenticated = True
-        st.experimental_rerun()
+        st.success("Access granted! Please wait...")
+        st.stop()  # ← prevent rerun trace by stopping early instead
     else:
         st.warning("Please enter the correct password.")
         st.stop()
+
 
 # === GOOGLE SHEET SETUP ===
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
