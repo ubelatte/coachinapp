@@ -247,32 +247,13 @@ with tab1:
             "Previous Coaching/Warnings": previous
         }
 
-# === FIXED SECTION FOR SPANISH TRANSLATION ===
-
-if st.session_state.submitted and not st.session_state.generated:
-    latest = st.session_state.latest
-    safe_name = latest["Employee Name"].replace(" ", "_")
-
-    # Inject language instruction at the top if not English
-    language_instruction = ""
-    if latest['Language Spoken'].lower() != "english":
-        language_instruction = f"""
-Please write the entire coaching report in {latest['Language Spoken']}.
-
-However, keep the following section headers exactly in English (do NOT translate them):
-Incident Summary:
-Expectations Going Forward:
-Tags:
-Action Taken:
-
-Translate only the content underneath each section.
-"""
 
     # Combine language instruction + original coaching prompt
     coaching_prompt = f"""{language_instruction}
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below. Follow all instructions exactly and do not add or reinterpret information.
 
 Tone & Focus Requirements:
+- If Language Spoken is "Spanish," translate to spanish. OTHERWISE, keep in English
 - Be factual and objective, not cold or accusatory.
 - Use neutral, professional language.
 - Reference Mestek policies or safety procedures only if clearly stated in the input.
@@ -283,7 +264,6 @@ Tone & Focus Requirements:
 - Avoid filler phrases like “without notifying supervisor” unless stated.
 - Designed to redirect behavior, clarify expectations, and support improvement.
 - Must be consistent with HR policies and state/federal labor laws.
-- If Language Spoken is "Spanish," translate to spanish. OTHERWISE, keep in English
 
 Policy Context (use only if relevant based on form data):
 - Counseling is part of progressive discipline (Factory Policies Packet 2025 – Performance Evaluation & Attendance).
