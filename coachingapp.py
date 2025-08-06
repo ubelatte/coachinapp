@@ -32,12 +32,12 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Enter password:", type="password")
     if password_input == "mestek":
         st.session_state.authenticated = True
-        st.experimental_rerun()  # Clean rerun, shows app form
+        st.experimental_rerun()
+        st.stop()  # ← ensures nothing runs after rerun is triggered
     else:
         st.warning("Please enter the correct password.")
-        st.stop()  # Stops here if not authenticated
+        st.stop()
 
-# 🧠 At this point, user is authenticated, app continues loading
 
 
 # === GOOGLE SHEET SETUP ===
