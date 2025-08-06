@@ -201,109 +201,33 @@ if "submitted" not in st.session_state:
 # === TABS ===
 tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
 
+
+
+
 with tab1:
     with st.form("coaching_form"):
-    # Supervisor
-        st.session_state["Supervisor Name"] = st.selectbox(
-            "Supervisor Name",
-            ["Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
-             "Janitza", "Fundi", "Lisa", "Dave", "Dean"],
-            index=["Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
-                   "Janitza", "Fundi", "Lisa", "Dave", "Dean"].index(st.session_state.get("Supervisor Name", "Marty"))
-    )
-
-    # Employee Name
-        st.session_state["Employee Name"] = st.text_input("Employee Name", st.session_state.get("Employee Name", ""))
-
-    # Department
-        st.session_state["Department"] = st.selectbox(
-            "Department",
-            ["Rough In", "Paint Line (NP)", "Commercial Fabrication",
-             "Baseboard Accessories", "Maintenance", "Residential Fabrication",
-             "Residential Assembly/Packing", "Warehouse (55WIPR)",
-             "Convector & Twin Flo", "Shipping/Receiving/Drivers",
-             "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"],
-            index=0 if st.session_state.get("Department", "") == "" else
-            ["Rough In", "Paint Line (NP)", "Commercial Fabrication",
-             "Baseboard Accessories", "Maintenance", "Residential Fabrication",
-             "Residential Assembly/Packing", "Warehouse (55WIPR)",
-             "Convector & Twin Flo", "Shipping/Receiving/Drivers",
-             "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"].index(st.session_state["Department"])
-    )
-
-    # Date of Incident
-        st.session_state["Date of Incident"] = st.date_input(
-            "Date of Incident",
-            value=st.session_state.get("Date of Incident", date.today())
-    )
-
-    # Issue Type
-        st.session_state["Issue Type"] = st.selectbox(
-            "Issue Type",
-            ["Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"],
-            index=0 if st.session_state.get("Issue Type", "") == "" else
-            ["Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"].index(st.session_state["Issue Type"])
-    )
-
-    # Action Taken
-        st.session_state["Action to be Taken"] = st.selectbox(
-            "Action to be Taken",
-            ["Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"],
-            index=0 if st.session_state.get("Action to be Taken", "") == "" else
-            ["Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"].index(st.session_state["Action to be Taken"])
-    )
-
-    # Description
-        st.session_state["Incident Description"] = st.text_area("Incident Description", st.session_state.get("Incident Description", ""))
-
-    # Points
-        st.session_state["Current Discipline Points"] = st.text_input("Current Discipline Points", st.session_state.get("Current Discipline Points", ""))
-
-    # Cost
-        st.session_state["Estimated/Annual Cost"] = st.text_input("Estimated/Annual Cost (optional)", st.session_state.get("Estimated/Annual Cost", ""))
-
-    # Language
+        supervisor = st.selectbox("Supervisor Name", [
+            "Marty", "Nick", "Pete", "Ralph", "Steve", "Bill", "John",
+            "Janitza", "Fundi", "Lisa", "Dave", "Dean"])
+        employee = st.text_input("Employee Name")
+        department = st.selectbox("Department", [
+            "Rough In", "Paint Line (NP)", "Commercial Fabrication",
+            "Baseboard Accessories", "Maintenance", "Residential Fabrication",
+            "Residential Assembly/Packing", "Warehouse (55WIPR)",
+            "Convector & Twin Flo", "Shipping/Receiving/Drivers",
+            "Dadanco Fabrication/Assembly", "Paint Line (Dadanco)"])
+        incident_date = st.date_input("Date of Incident", value=date.today())
+        issue_type = st.selectbox("Issue Type", [
+            "Attendance", "Safety", "Behavior", "Performance", "Policy Violation", "Recognition"])
+        action_taken = st.selectbox("Action to be Taken", [
+            "Coaching", "Verbal Warning", "Written Warning", "Suspension", "Termination"])
+        description = st.text_area("Incident Description")
+        points = st.text_input("Current Discipline Points")
+        estimated_cost = st.text_input("Estimated/Annual Cost (optional)")
         language_option = st.selectbox("Language Spoken", ["English", "Spanish", "Other"])
-        st.session_state["Language Spoken"] = (
-            st.text_input("Please specify the language:", st.session_state.get("Language Spoken", ""))
-            if language_option == "Other" else language_option
-    )
-
-    # Previous
-        st.session_state["Previous Coaching/Warnings"] = st.text_area(
-            "Previous Coaching/Warnings (if any)",
-            st.session_state.get("Previous Coaching/Warnings", ""),
-            placeholder="e.g., Verbal warning issued on 7/1 for tardiness."
-    )
-
-    # 💾 Save + Submit buttons
-        col1, col2 = st.columns(2)
-        save_clicked = col1.form_submit_button("💾 Save Progress")
-        submitted = col2.form_submit_button("Generate Coaching Report")
-
-# After form block:
-    if save_clicked:
-        st.success("✅ Progress saved. You can safely return later.")
-        st.stop()
-
-    if submitted:
-        st.session_state.submitted = True
-        st.session_state.generated = False
-        st.session_state.latest = {
-            "Timestamp": date.today().isoformat(),
-            "Supervisor Name": st.session_state["Supervisor Name"],
-            "Employee Name": st.session_state["Employee Name"],
-            "Department": st.session_state["Department"],
-            "Date of Incident": st.session_state["Date of Incident"].strftime("%Y-%m-%d"),
-            "Issue Type": st.session_state["Issue Type"],
-            "Action to be Taken": st.session_state["Action to be Taken"],
-            "Incident Description": st.session_state["Incident Description"],
-            "Current Discipline Points": st.session_state["Current Discipline Points"],
-            "Estimated/Annual Cost": st.session_state["Estimated/Annual Cost"],
-            "Language Spoken": st.session_state["Language Spoken"],
-            "Previous Coaching/Warnings": st.session_state["Previous Coaching/Warnings"]
-        }
-
+        language = st.text_input("Please specify the language:") if language_option == "Other" else language_option
+        previous = st.text_area("Previous Coaching/Warnings (if any)", placeholder="e.g., Verbal warning issued on 7/1 for tardiness.")
+        submitted = st.form_submit_button("Generate Coaching Report")
 
     if submitted:
         st.session_state.submitted = True
