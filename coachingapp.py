@@ -25,10 +25,17 @@ if "reset_form" in st.session_state:
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
 # === PASSWORD ===
-PASSWORD = "mestek"
-if st.text_input("Enter password:", type="password") != PASSWORD:
-    st.warning("Please enter the correct password.")
-    st.stop()
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    password_input = st.text_input("Enter password:", type="password")
+    if password_input == "mestek":
+        st.session_state.authenticated = True
+        st.experimental_rerun()
+    else:
+        st.warning("Please enter the correct password.")
+        st.stop()
 
 # === GOOGLE SHEET SETUP ===
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
