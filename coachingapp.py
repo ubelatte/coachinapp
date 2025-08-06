@@ -24,7 +24,7 @@ if "reset_form" in st.session_state:
 # === PAGE CONFIG ===
 st.set_page_config(page_title="Mestek Coaching Generator", layout="wide")
 
-# === PASSWORD ===
+# === PASSWORD LOCK (Session-based) ===
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -32,11 +32,12 @@ if not st.session_state.authenticated:
     password_input = st.text_input("Enter password:", type="password")
     if password_input == "mestek":
         st.session_state.authenticated = True
-        st.success("Access granted! Please wait...")
-        st.stop()  # ← prevent rerun trace by stopping early instead
+        st.experimental_rerun()  # Clean rerun, shows app form
     else:
         st.warning("Please enter the correct password.")
-        st.stop()
+        st.stop()  # Stops here if not authenticated
+
+# 🧠 At this point, user is authenticated, app continues loading
 
 
 # === GOOGLE SHEET SETUP ===
