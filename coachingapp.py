@@ -251,12 +251,12 @@ if st.session_state.submitted and not st.session_state.generated:
     latest = st.session_state.latest
     safe_name = latest["Employee Name"].replace(" ", "_")
 
-language_instruction = ""
-if latest['Language Spoken'].lower() != "english":
-    language_instruction = f"Please write the entire coaching report in {latest['Language Spoken']}, but keep all section headers in English exactly as written.\n"
+    # Add language instruction at this point
+    language_instruction = ""
+    if latest['Language Spoken'].lower() != "english":
+        language_instruction = f"Please write the entire coaching report in {latest['Language Spoken']}, but keep all section headers in English exactly as written.\n\n"
 
-    coaching_prompt = f"""
-{language_instruction}
+    coaching_prompt = f"""{language_instruction}
 You are a workplace coaching assistant. Generate a Workplace Coaching Report using the structure and tone below...
 
 Tone & Focus Requirements:
