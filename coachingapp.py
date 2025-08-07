@@ -108,7 +108,7 @@ def add_markdown_bold_paragraph(doc, text):
         run = para.add_run(buffer)
         run.bold = bold
 
-def build_coaching_doc(latest, coaching_dict):
+def build_coaching_doc(latest, coaching_dict, translated_ack_text=None):
     doc = Document()
     doc.add_heading("Employee Coaching & Counseling Form", 0)
     doc.add_paragraph(f"(Created {date.today().strftime('%m/%d/%y')})")
@@ -127,13 +127,19 @@ def build_coaching_doc(latest, coaching_dict):
             add_section_header(doc, section + ":")
             add_markdown_bold_paragraph(doc, coaching_dict[section])  # ✅ real bold from markdown
 
-    doc.add_paragraph("\nAcknowledgment of Receipt:")
-    doc.add_paragraph(
-        "I understand that this document serves as a formal record of the counseling provided. "
-        "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
-        "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
-    doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
-    doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
+    # Acknowledgment Section (translated if applicable)
+    if translated_ack_text:
+        for line in translated_ack_text.strip().splitlines():
+            doc.add_paragraph(line)
+    else:
+        doc.add_paragraph("Acknowledgment of Receipt:")
+        doc.add_paragraph(
+            "I understand that this document serves as a formal record of the counseling provided. "
+            "I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. "
+            "My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.")
+        doc.add_paragraph("Employee Signature: _________________________        Date: ________________")
+        doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
+
     return doc
 
 
