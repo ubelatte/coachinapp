@@ -136,8 +136,6 @@ def build_coaching_doc(latest, coaching_dict):
     doc.add_paragraph("Supervisor Signature: ________________________        Date: ________________")
     return doc
 
-
-
 def build_leadership_doc(latest, leadership_text):
     doc = Document()
     doc.add_heading("Leadership Reflection", 0)
@@ -172,7 +170,6 @@ def build_leadership_doc(latest, leadership_text):
 
     return doc
 
-
 def log_submission_to_sheet(data_dict):
     timestamp = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     row = [
@@ -191,8 +188,6 @@ def log_submission_to_sheet(data_dict):
     ]
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
-
-
 # === SESSION STATE INIT ===
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
@@ -200,9 +195,6 @@ if "submitted" not in st.session_state:
 
 # === TABS ===
 tab1, tab2 = st.tabs(["📝 Coaching Form", "📊 Trend Dashboard"])
-
-
-
 
 with tab1:
     with st.form("coaching_form"):
@@ -295,12 +287,8 @@ List 2-4 short keywords (e.g., attendance, policy violation, safety).
 
 Action Taken:
 Simply restate which action was taken. (e.g., coaching, verbal warning, written warning, suspension, termination, etc.)
-
 """
-
-
-
-
+    
     leadership_prompt = f"""
 You are a leadership coach. Write a private reflection including:
 Private Reflection:
@@ -353,7 +341,6 @@ Description: {latest['Incident Description']}
                     "content": f"""
         Translate ONLY the following block of text into {latest['Language Spoken']}.
         Do not remove or change any formatting. Do not add any extra text.
-
         ---
         Acknowledgment of Receipt:
         I understand that this document serves as a formal record of the counseling provided. I acknowledge that the issue has been discussed with me, and I understand the expectations going forward. My signature below does not necessarily indicate agreement but confirms that I have received and reviewed this documentation.
@@ -363,13 +350,12 @@ Description: {latest['Incident Description']}
                 }]
             ).choices[0].message.content.strip()
 
-        
+
 # ⬇️ Continue as usual
         leadership_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": leadership_prompt}]
         ).choices[0].message.content.strip()
-
 
     coaching_sections = parse_coaching_sections(coaching_response)
     coaching_io = BytesIO()
